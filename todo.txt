@@ -1,0 +1,47 @@
+Версия ноды node -v  v22.14.0
+
+
+Commands
+
+BACKEND
+
+# Создание Nest.js проекта
+npx @nestjs/cli new cats-market-backend
+cd cats-market-backend
+
+# Установка зависимостей для PostgreSQL и TypeORM
+npm install @nestjs/typeorm typeorm pg
+npm install @nestjs/config
+npm install class-validator class-transformer
+
+# Установка дополнительных зависимостей
+npm install @nestjs/swagger
+
+
+
+
+
+FRONTEND
+
+
+npx create-react-app cats-market-frontend --template typescript
+cd cats-market-frontend
+
+# Установка зависимостей для работы с API
+npm install axios
+npm install @types/axios
+npm install react-router-dom
+npm install @types/react-router-dom
+
+
+
+Глобал стейдж Redux Toolkit
+
+
+# Основные зависимости Redux Toolkit
+npm install @reduxjs/toolkit
+npm install react-redux
+npm install @types/react-redux
+
+# Дополнительные зависимости для асинхронных операций (обычно уже включены в RTK)
+npm install redux-thunk
