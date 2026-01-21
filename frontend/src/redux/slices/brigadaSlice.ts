@@ -5,7 +5,7 @@ export const fetchBrigadas = createAsyncThunk(
   'brigada/fetchBrigadasStatus',
   async () => {
     const { data } = await axios.get('http://localhost:3000/brigada');
-    return data;
+    return data as any[];
   }
 );
 

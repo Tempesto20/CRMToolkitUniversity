@@ -1,16 +1,14 @@
 import axios from 'axios';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// Асинхронные thunks (как в вашем примере с котами)
 export const createEmployee = createAsyncThunk(
   'employees/createEmployeeStatus',
   async (formData: FormData) => {
-    const { data } = await axios.post('http://localhost:3000/employees', formData, {
+    const { data } = await axios.post('http://localhost:3000/api/employees', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
-    console.log('Сотрудник создан:', data);
     return data;
   }
 );
@@ -18,22 +16,19 @@ export const createEmployee = createAsyncThunk(
 export const fetchWorkTypes = createAsyncThunk(
   'employees/fetchWorkTypesStatus',
   async (serviceTypeId: number) => {
-    const { data } = await axios.get(`http://localhost:3000/employees/work-types/${serviceTypeId}`);
-    console.log('Виды работ получены:', data);
-    return data;
+    const { data } = await axios.get(`http://localhost:3000/api/employees/work-types/${serviceTypeId}`);
+    return data as any[];
   }
 );
 
 export const fetchAllEmployees = createAsyncThunk(
   'employees/fetchAllEmployeesStatus',
   async () => {
-    const { data } = await axios.get('http://localhost:3000/employees');
-    console.log('Все сотрудники:', data);
-    return data;
+    const { data } = await axios.get('http://localhost:3000/api/employees');
+    return data as any[];
   }
 );
 
-// Типы (как в вашем примере)
 export type Employee = {
   personal_number: number;
   full_name: string;
@@ -62,7 +57,6 @@ export type WorkType = {
   work_type_name: string;
 };
 
-// Состояние (как в вашем примере)
 interface EmployeesState {
   employees: Employee[];
   workTypes: WorkType[];
@@ -79,7 +73,6 @@ const initialState: EmployeesState = {
   successMessage: null,
 };
 
-// Создаем slice (как в вашем примере)
 const employeesSlice = createSlice({
   name: 'employees',
   initialState,
@@ -95,47 +88,43 @@ const employeesSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Создание сотрудника
-    builder.addCase(createEmployee.pending, (state) => {
-      state.status = 'loading';
-      state.error = null;
-      state.successMessage = null;
-    });
-    builder.addCase(createEmployee.fulfilled, (state, action) => {
-      state.status = 'success';
-      state.employees.push(action.payload.employee);
-      state.successMessage = 'Сотрудник успешно добавлен!';
-    });
-    builder.addCase(createEmployee.rejected, (state, action) => {
-      state.status = 'error';
-      state.error = action.error.message || 'Ошибка при добавлении сотрудника';
-    });
-
-    // Получение видов работ
-    builder.addCase(fetchWorkTypes.pending, (state) => {
-      state.status = 'loading';
-    });
-    builder.addCase(fetchWorkTypes.fulfilled, (state, action) => {
-      state.workTypes = action.payload;
-      state.status = 'success';
-    });
-    builder.addCase(fetchWorkTypes.rejected, (state) => {
-      state.status = 'error';
-      state.workTypes = [];
-    });
-
-    // Получение всех сотрудников
-    builder.addCase(fetchAllEmployees.pending, (state) => {
-      state.status = 'loading';
-    });
-    builder.addCase(fetchAllEmployees.fulfilled, (state, action) => {
-      state.employees = action.payload;
-      state.status = 'success';
-    });
-    builder.addCase(fetchAllEmployees.rejected, (state) => {
-      state.status = 'error';
-      state.employees = [];
-    });
+    builder
+      .addCase(createEmployee.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+        state.successMessage = null;
+      })
+      .addCase(createEmployee.fulfilled, (state, action) => {
+        state.status = 'success';
+        state.employees.push(action.payload as any);
+        state.successMessage = 'Сотрудник успешно добавлен!';
+      })
+      .addCase(createEmployee.rejected, (state, action) => {
+        state.status = 'error';
+        state.error = action.error.message || 'Ошибка при добавлении сотрудника';
+      })
+      .addCase(fetchWorkTypes.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchWorkTypes.fulfilled, (state, action) => {
+        state.workTypes = action.payload;
+        state.status = 'success';
+      })
+      .addCase(fetchWorkTypes.rejected, (state) => {
+        state.status = 'error';
+        state.workTypes = [];
+      })
+      .addCase(fetchAllEmployees.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchAllEmployees.fulfilled, (state, action) => {
+        state.employees = action.payload;
+        state.status = 'success';
+      })
+      .addCase(fetchAllEmployees.rejected, (state) => {
+        state.status = 'error';
+        state.employees = [];
+      });
   },
 });
 

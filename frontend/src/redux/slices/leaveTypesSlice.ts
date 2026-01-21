@@ -5,7 +5,7 @@ export const fetchLeaveTypes = createAsyncThunk(
   'leaveTypes/fetchLeaveTypesStatus',
   async () => {
     const { data } = await axios.get('http://localhost:3000/leave-types');
-    return data;
+    return data as any[];
   }
 );
 
@@ -13,7 +13,7 @@ export const fetchLeaveTypesStats = createAsyncThunk(
   'leaveTypes/fetchLeaveTypesStatsStatus',
   async () => {
     const { data } = await axios.get('http://localhost:3000/leave-types/stats');
-    return data;
+    return data as any[];
   }
 );
 
@@ -21,7 +21,7 @@ export const searchLeaveTypes = createAsyncThunk(
   'leaveTypes/searchLeaveTypesStatus',
   async (query: string) => {
     const { data } = await axios.get(`http://localhost:3000/leave-types/search?q=${query}`);
-    return data;
+    return data as any[];
   }
 );
 
@@ -75,7 +75,6 @@ const leaveTypesSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Получение всех типов отпусков
       .addCase(fetchLeaveTypes.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -88,28 +87,23 @@ const leaveTypesSlice = createSlice({
         state.status = 'error';
         state.error = action.error.message || 'Failed to fetch leave types';
       })
-      // Получение статистики
       .addCase(fetchLeaveTypesStats.fulfilled, (state, action) => {
         state.leaveTypesStats = action.payload;
       })
-      // Поиск типов отпусков
       .addCase(searchLeaveTypes.fulfilled, (state, action) => {
         state.searchResults = action.payload;
       })
-      // Создание типа отпуска
       .addCase(createLeaveType.fulfilled, (state, action) => {
         state.leaveTypes.push(action.payload);
       })
-      // Обновление типа отпуска
       .addCase(updateLeaveType.fulfilled, (state, action) => {
         const index = state.leaveTypes.findIndex(
-          lt => lt.leaveTypeId === action.payload.leaveTypeId
+          lt => lt.leaveTypeId === (action.payload as any).leaveTypeId
         );
         if (index !== -1) {
           state.leaveTypes[index] = action.payload;
         }
       })
-      // Удаление типа отпуска
       .addCase(deleteLeaveType.fulfilled, (state, action) => {
         state.leaveTypes = state.leaveTypes.filter(
           lt => lt.leaveTypeId !== action.payload

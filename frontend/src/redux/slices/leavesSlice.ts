@@ -5,7 +5,7 @@ export const fetchLeaves = createAsyncThunk(
   'leaves/fetchLeavesStatus',
   async () => {
     const { data } = await axios.get('http://localhost:3000/leaves');
-    return data;
+    return data as any[];
   }
 );
 
@@ -13,7 +13,7 @@ export const fetchActiveLeaves = createAsyncThunk(
   'leaves/fetchActiveLeavesStatus',
   async () => {
     const { data } = await axios.get('http://localhost:3000/leaves/active');
-    return data;
+    return data as any[];
   }
 );
 
@@ -21,7 +21,7 @@ export const fetchTodayLeaves = createAsyncThunk(
   'leaves/fetchTodayLeavesStatus',
   async () => {
     const { data } = await axios.get('http://localhost:3000/leaves/today');
-    return data;
+    return data as any[];
   }
 );
 
@@ -29,7 +29,7 @@ export const fetchEmployeeLeaves = createAsyncThunk(
   'leaves/fetchEmployeeLeavesStatus',
   async (personalNumber: number) => {
     const { data } = await axios.get(`http://localhost:3000/leaves/employee/${personalNumber}`);
-    return data;
+    return data as any[];
   }
 );
 
@@ -37,7 +37,7 @@ export const fetchLeavesByPeriod = createAsyncThunk(
   'leaves/fetchLeavesByPeriodStatus',
   async ({ startDate, endDate }: { startDate: string; endDate: string }) => {
     const { data } = await axios.get(`http://localhost:3000/leaves/period?start=${startDate}&end=${endDate}`);
-    return data;
+    return data as any[];
   }
 );
 
@@ -108,7 +108,6 @@ const leavesSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Получение всех отпусков
       .addCase(fetchLeaves.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -121,27 +120,21 @@ const leavesSlice = createSlice({
         state.status = 'error';
         state.error = action.error.message || 'Failed to fetch leaves';
       })
-      // Получение активных отпусков
       .addCase(fetchActiveLeaves.fulfilled, (state, action) => {
         state.activeLeaves = action.payload;
       })
-      // Получение сегодняшних отпусков
       .addCase(fetchTodayLeaves.fulfilled, (state, action) => {
         state.todayLeaves = action.payload;
       })
-      // Получение отпусков сотрудника
       .addCase(fetchEmployeeLeaves.fulfilled, (state, action) => {
         state.employeeLeaves = action.payload;
       })
-      // Получение отпусков за период
       .addCase(fetchLeavesByPeriod.fulfilled, (state, action) => {
         state.leavesByPeriod = action.payload;
       })
-      // Получение статистики
       .addCase(fetchLeavesStats.fulfilled, (state, action) => {
         state.stats = action.payload;
       })
-      // Создание отпуска
       .addCase(createLeave.pending, (state) => {
         state.status = 'loading';
       })
@@ -154,24 +147,21 @@ const leavesSlice = createSlice({
         state.status = 'error';
         state.error = action.error.message || 'Failed to create leave';
       })
-      // Обновление отпуска
       .addCase(updateLeave.fulfilled, (state, action) => {
         const index = state.leaves.findIndex(
-          leave => leave.leaveId === action.payload.leaveId
+          leave => leave.leaveId === (action.payload as any).leaveId
         );
         if (index !== -1) {
           state.leaves[index] = action.payload;
         }
         
-        // Обновляем также в activeLeaves если там есть
         const activeIndex = state.activeLeaves.findIndex(
-          leave => leave.leaveId === action.payload.leaveId
+          leave => leave.leaveId === (action.payload as any).leaveId
         );
         if (activeIndex !== -1) {
           state.activeLeaves[activeIndex] = action.payload;
         }
       })
-      // Удаление отпуска
       .addCase(deleteLeave.fulfilled, (state, action) => {
         state.leaves = state.leaves.filter(
           leave => leave.leaveId !== action.payload

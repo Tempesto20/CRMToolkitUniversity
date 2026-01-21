@@ -5,7 +5,7 @@ export const fetchLocomotives = createAsyncThunk(
   'locomotives/fetchLocomotivesStatus',
   async () => {
     const { data } = await axios.get('http://localhost:3000/locomotives');
-    return data;
+    return data as any[];
   }
 );
 
@@ -13,7 +13,7 @@ export const fetchAvailableLocomotives = createAsyncThunk(
   'locomotives/fetchAvailableLocomotivesStatus',
   async () => {
     const { data } = await axios.get('http://localhost:3000/locomotives/available');
-    return data;
+    return data as any[];
   }
 );
 
@@ -21,7 +21,7 @@ export const fetchLocomotivesByService = createAsyncThunk(
   'locomotives/fetchLocomotivesByServiceStatus',
   async (serviceTypeId: number) => {
     const { data } = await axios.get(`http://localhost:3000/locomotives/by-service/${serviceTypeId}`);
-    return data;
+    return data as any[];
   }
 );
 
@@ -85,7 +85,6 @@ const locomotivesSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Получение всех локомотивов
       .addCase(fetchLocomotives.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -98,32 +97,26 @@ const locomotivesSlice = createSlice({
         state.status = 'error';
         state.error = action.error.message || 'Failed to fetch locomotives';
       })
-      // Получение доступных локомотивов
       .addCase(fetchAvailableLocomotives.fulfilled, (state, action) => {
         state.availableLocomotives = action.payload;
       })
-      // Получение локомотивов по службе
       .addCase(fetchLocomotivesByService.fulfilled, (state, action) => {
         state.locomotivesByService = action.payload;
       })
-      // Получение статистики
       .addCase(fetchLocomotiveStats.fulfilled, (state, action) => {
         state.stats = action.payload;
       })
-      // Создание локомотива
       .addCase(createLocomotive.fulfilled, (state, action) => {
         state.locomotives.push(action.payload);
       })
-      // Обновление локомотива
       .addCase(updateLocomotive.fulfilled, (state, action) => {
         const index = state.locomotives.findIndex(
-          loc => loc.locomotiveId === action.payload.locomotiveId
+          loc => loc.locomotiveId === (action.payload as any).locomotiveId
         );
         if (index !== -1) {
           state.locomotives[index] = action.payload;
         }
       })
-      // Удаление локомотива
       .addCase(deleteLocomotive.fulfilled, (state, action) => {
         state.locomotives = state.locomotives.filter(
           loc => loc.locomotiveId !== action.payload

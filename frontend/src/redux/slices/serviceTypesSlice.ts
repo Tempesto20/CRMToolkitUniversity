@@ -5,7 +5,7 @@ export const fetchServiceTypes = createAsyncThunk(
   'serviceTypes/fetchServiceTypesStatus',
   async () => {
     const { data } = await axios.get('http://localhost:3000/service-types');
-    return data;
+    return data as any[];
   }
 );
 
@@ -70,7 +70,7 @@ const serviceTypesSlice = createSlice({
       })
       .addCase(updateServiceType.fulfilled, (state, action) => {
         const index = state.serviceTypes.findIndex(
-          st => st.serviceTypeId === action.payload.serviceTypeId
+          st => st.serviceTypeId === (action.payload as any).serviceTypeId
         );
         if (index !== -1) {
           state.serviceTypes[index] = action.payload;

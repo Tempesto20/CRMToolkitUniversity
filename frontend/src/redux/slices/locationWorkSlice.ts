@@ -5,7 +5,7 @@ export const fetchLocationWorks = createAsyncThunk(
   'locationWork/fetchLocationWorksStatus',
   async () => {
     const { data } = await axios.get('http://localhost:3000/location-work');
-    return data;
+    return data as any[];
   }
 );
 
@@ -13,7 +13,7 @@ export const fetchLocationWorksWithStats = createAsyncThunk(
   'locationWork/fetchLocationWorksWithStatsStatus',
   async () => {
     const { data } = await axios.get('http://localhost:3000/location-work/stats');
-    return data;
+    return data as any[];
   }
 );
 
@@ -21,7 +21,7 @@ export const fetchPopularLocations = createAsyncThunk(
   'locationWork/fetchPopularLocationsStatus',
   async (limit: number = 10) => {
     const { data } = await axios.get(`http://localhost:3000/location-work/popular?limit=${limit}`);
-    return data;
+    return data as any[];
   }
 );
 
@@ -29,7 +29,7 @@ export const searchLocationWorks = createAsyncThunk(
   'locationWork/searchLocationWorksStatus',
   async (name: string) => {
     const { data } = await axios.get(`http://localhost:3000/location-work/search/${name}`);
-    return data;
+    return data as any[];
   }
 );
 
@@ -89,7 +89,6 @@ const locationWorkSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Получение всех мест работы
       .addCase(fetchLocationWorks.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -102,32 +101,26 @@ const locationWorkSlice = createSlice({
         state.status = 'error';
         state.error = action.error.message || 'Failed to fetch locations';
       })
-      // Получение мест работы со статистикой
       .addCase(fetchLocationWorksWithStats.fulfilled, (state, action) => {
         state.locationWorksWithStats = action.payload;
       })
-      // Получение популярных мест
       .addCase(fetchPopularLocations.fulfilled, (state, action) => {
         state.popularLocations = action.payload;
       })
-      // Поиск мест работы
       .addCase(searchLocationWorks.fulfilled, (state, action) => {
         state.searchResults = action.payload;
       })
-      // Создание места работы
       .addCase(createLocationWork.fulfilled, (state, action) => {
         state.locationWorks.push(action.payload);
       })
-      // Обновление места работы
       .addCase(updateLocationWork.fulfilled, (state, action) => {
         const index = state.locationWorks.findIndex(
-          loc => loc.locationId === action.payload.locationId
+          loc => loc.locationId === (action.payload as any).locationId
         );
         if (index !== -1) {
           state.locationWorks[index] = action.payload;
         }
       })
-      // Удаление места работы
       .addCase(deleteLocationWork.fulfilled, (state, action) => {
         state.locationWorks = state.locationWorks.filter(
           loc => loc.locationId !== action.payload
