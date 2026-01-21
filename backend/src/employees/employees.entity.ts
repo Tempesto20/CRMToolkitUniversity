@@ -1,8 +1,8 @@
 import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { ServiceType } from '../../service-types/entities/service-type.entity';
-import { WorkType } from '../../work-types/entities/work-type.entity';
-import { Locomotive } from '../../locomotives/entities/locomotive.entity';
-import { Brigada } from '../../brigada/entities/brigada.entity';
+import { ServiceType } from '../service-types/service-types.entity';
+import { WorkType } from '../work-types/work-types.entity';
+import { Locomotive } from '../locomotives/locomotives.entity';
+import { Brigada } from '../brigada/brigada.entity';
 
 @Entity('employees')
 export class Employee {

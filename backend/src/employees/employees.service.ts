@@ -1,12 +1,12 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Employee } from './entities/employee.entity';
+import { Employee } from './employees.entity';
 import { CreateEmployeeWithPhotoDto } from './dto/create-employee.dto';
-import { ServiceType } from '../service-types/entities/service-type.entity';
-import { WorkType } from '../work-types/entities/work-type.entity';
-import { Locomotive } from '../locomotives/entities/locomotive.entity';
-import { Brigada } from '../brigada/entities/brigada.entity';
+import { ServiceType } from '../service-types/service-types.entity';
+import { WorkType } from '../work-types/work-types.entity';
+import { Locomotive } from '../locomotives/locomotives.entity';
+import { Brigada } from '../brigada/brigada.entity';
 
 @Injectable()
 export class EmployeesService {
