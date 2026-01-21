@@ -1,6 +1,29 @@
+// import { Module } from '@nestjs/common';
+// import { TypeOrmModule } from '@nestjs/typeorm';
+// // import { CatsModule } from './cats/cats.module';
+
+// @Module({
+//   imports: [
+//     TypeOrmModule.forRoot({
+//       type: 'postgres',
+//       host: 'localhost',
+//       port: 5432,
+//       username: 'postgres',
+//       password: '1',
+//       database: 'CRMToolkitUniversity',
+//       entities: [__dirname + '/**/*.entity{.ts,.js}'],
+//       // synchronize: true,
+//       synchronize: false,
+//     }),
+//     // CatsModule,
+//   ],
+// })
+// export class AppModule {}
+
+
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-// import { CatsModule } from './cats/cats.module';
+import { EmployeesController } from './employees/employees.controller';
 
 @Module({
   imports: [
@@ -8,14 +31,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       type: 'postgres',
       host: 'localhost',
       port: 5432,
-      username: 'postgres',
-      password: '1',
-      database: 'CatsMarketToolkitUniversity',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      // synchronize: true,
+      username: 'your_username',
+      password: 'your_password',
+      database: 'CRMToolkitUniversity',
+      entities: [],
       synchronize: false,
     }),
-    // CatsModule,
   ],
+  controllers: [EmployeesController],
 })
 export class AppModule {}
