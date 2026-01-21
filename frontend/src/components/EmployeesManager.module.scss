@@ -1,134 +1,234 @@
-// EmployeesManager.module.scss
-.employeesManager {
+/* frontend/src/components/EmployeesManager.css */
+.employees-manager {
+  padding: 24px;
+  background-color: #f0f2f5;
+  min-height: calc(100vh - 64px);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  background: white;
   padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  
-  h1 {
-    color: #333;
-    margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #1890ff;
+}
+
+.search-section {
+  margin-bottom: 24px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-input {
+  margin-bottom: 16px;
+}
+
+.search-stats {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 14px;
+}
+
+.stat-value {
+  font-weight: bold;
+  color: #1890ff;
+  font-size: 16px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 16px;
+}
+
+.error-message {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  margin-top: 24px;
+}
+
+.error-message p {
+  color: #cf1322;
+  margin-bottom: 16px;
+}
+
+.no-results {
+  background: white;
+  border-radius: 8px;
+  padding: 48px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.employees-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.employee-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.employee-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.employee-photo {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #1890ff;
+}
+
+.employee-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.default-photo {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  border-radius: 50%;
+}
+
+.employee-info {
+  flex: 1;
+}
+
+.employee-info h3 {
+  margin: 0 0 12px 0;
+  color: #262626;
+  font-size: 18px;
+  text-align: center;
+}
+
+.employee-details {
+  margin-bottom: 16px;
+}
+
+.employee-details p {
+  margin: 6px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.employee-details strong {
+  color: #595959;
+  font-weight: 500;
+}
+
+.employee-value {
+  color: #262626;
+  text-align: right;
+  max-width: 150px;
+  word-break: break-word;
+}
+
+.employee-access {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+.access-badge {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  color: #52c41a;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.employee-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.action-btn {
+  flex: 1;
+}
+
+.edit-btn {
+  background-color: #52c41a;
+  border-color: #52c41a;
+}
+
+.edit-btn:hover {
+  background-color: #73d13d;
+  border-color: #73d13d;
+}
+
+.delete-confirmation {
+  padding: 16px 0;
+}
+
+.delete-confirmation p {
+  margin: 8px 0;
+}
+
+.warning-text {
+  color: #ff4d4f;
+  font-weight: bold;
+  margin-top: 16px !important;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .employees-grid {
+    grid-template-columns: 1fr;
   }
   
-  .searchSection {
-    margin-bottom: 30px;
-    
-    .searchInput {
-      width: 100%;
-      padding: 12px 16px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
-    
-    .stats {
-      color: #666;
-      font-size: 14px;
-    }
-  }
-  
-  .loading {
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
     text-align: center;
-    padding: 40px;
-    font-size: 18px;
-    color: #666;
   }
   
-  .employeesGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    
-    .employeeCard {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      transition: transform 0.2s ease;
-      
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-      
-      .employeePhoto {
-        height: 150px;
-        background: #f5f5f5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-        
-        .defaultPhoto {
-          font-size: 3rem;
-          opacity: 0.5;
-        }
-      }
-      
-      .employeeInfo {
-        padding: 15px;
-        
-        h3 {
-          margin: 0 0 10px 0;
-          color: #333;
-          font-size: 18px;
-        }
-        
-        p {
-          margin: 5px 0;
-          color: #666;
-          font-size: 14px;
-          
-          strong {
-            color: #333;
-          }
-        }
-      }
-      
-      .employeeActions {
-        padding: 15px;
-        border-top: 1px solid #eee;
-        display: flex;
-        gap: 10px;
-        
-        button {
-          flex: 1;
-          padding: 8px 12px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-          
-          &.editBtn {
-            background: #007bff;
-            color: white;
-            
-            &:hover {
-              background: #0056b3;
-            }
-          }
-          
-          &.deleteBtn {
-            background: #dc3545;
-            color: white;
-            
-            &:hover {
-              background: #c82333;
-            }
-          }
-        }
-      }
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .employeesGrid {
-      grid-template-columns: 1fr;
-    }
+  .search-stats {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
