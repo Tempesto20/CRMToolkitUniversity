@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Brigada } from './brigada.entity';
@@ -18,9 +18,15 @@ export class BrigadaService {
   }
 
   async findOne(id: number): Promise<Brigada> {
-    return this.brigadaRepository.findOne({ 
-      where: { brigadaId: id } 
+    const brigada = await this.brigadaRepository.findOne({
+      where: { brigadaId: id }
     });
+    
+    if (!brigada) {
+      throw new NotFoundException(`Бригада с ID ${id} не найдена`);
+    }
+    
+    return brigada;
   }
 
   async create(createBrigadaDto: CreateBrigadaDto): Promise<Brigada> {
@@ -41,6 +47,7 @@ export class BrigadaService {
   }
 
   async remove(id: number): Promise<void> {
-    await this.brigadaRepository.delete(id);
+    const brigada = await this.findOne(id);
+    await this.brigadaRepository.remove(brigada);
   }
 }

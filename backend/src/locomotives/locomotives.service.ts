@@ -131,15 +131,17 @@ export class LocomotivesService {
       locomotive.locomotiveName = updateLocomotiveDto.locomotiveName;
     }
 
-    // Обновление связей
+    // Обновление связей - ЗАМЕНИТЕ ЭТОТ БЛОК КОДА:
     if (updateLocomotiveDto.locationId !== undefined) {
       if (updateLocomotiveDto.locationId) {
         const location = await this.locationWorkRepository.findOne({
           where: { locationId: updateLocomotiveDto.locationId }
         });
-        locomotive.location = location;
+        if (location) {
+          locomotive.location = location;
+        }
       } else {
-        locomotive.location = null;
+        locomotive.location = undefined;
       }
     }
 
@@ -148,9 +150,11 @@ export class LocomotivesService {
         const serviceType = await this.serviceTypeRepository.findOne({
           where: { serviceTypeId: updateLocomotiveDto.serviceTypeId }
         });
-        locomotive.serviceType = serviceType;
+        if (serviceType) {
+          locomotive.serviceType = serviceType;
+        }
       } else {
-        locomotive.serviceType = null;
+        locomotive.serviceType = undefined;
       }
     }
 
@@ -159,9 +163,11 @@ export class LocomotivesService {
         const workType = await this.workTypeRepository.findOne({
           where: { workTypeId: updateLocomotiveDto.workTypeId }
         });
-        locomotive.workType = workType;
+        if (workType) {
+          locomotive.workType = workType;
+        }
       } else {
-        locomotive.workType = null;
+        locomotive.workType = undefined;
       }
     }
 

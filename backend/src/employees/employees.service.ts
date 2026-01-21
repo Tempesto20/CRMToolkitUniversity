@@ -2,7 +2,7 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Employee } from './employees.entity';
-import { CreateEmployeeWithPhotoDto } from './dto/create-employee.dto';
+import { CreateEmployeeWithPhotoDto } from './dto/create-employees.dto';
 import { ServiceType } from '../service-types/service-types.entity';
 import { WorkType } from '../work-types/work-types.entity';
 import { Locomotive } from '../locomotives/locomotives.entity';
@@ -58,16 +58,26 @@ export class EmployeesService {
 
     let locomotive: Locomotive | undefined;
     if (createEmployeeDto.locomotiveId) {
-      locomotive = await this.locomotivesRepository.findOne({
+      const loc = await this.locomotivesRepository.findOne({
         where: { locomotiveId: createEmployeeDto.locomotiveId },
       });
+      if (loc) {
+        locomotive = loc;
+      } else {
+        throw new NotFoundException(`Locomotive with ID ${createEmployeeDto.locomotiveId} not found`);
+      }
     }
 
     let brigada: Brigada | undefined;
     if (createEmployeeDto.brigadaId) {
-      brigada = await this.brigadaRepository.findOne({
+      const brig = await this.brigadaRepository.findOne({
         where: { brigadaId: createEmployeeDto.brigadaId },
       });
+      if (brig) {
+        brigada = brig;
+      } else {
+        throw new NotFoundException(`Brigada with ID ${createEmployeeDto.brigadaId} not found`);
+      }
     }
 
     // Создаем сотрудника
@@ -100,11 +110,21 @@ export class EmployeesService {
   }
 
   async getWorkTypesByService(serviceTypeId: number): Promise<WorkType[]> {
-    return this.workTypesRepository.find({
-      where: { 
-        workTypeId: serviceTypeId === 1 ? [1, 2] : [3, 4]
-      }
-    });
+    let workTypeIds: number[];
+    
+    if (serviceTypeId === 1) {
+      workTypeIds = [1, 2];
+    } else if (serviceTypeId === 2) {
+      workTypeIds = [3, 4];
+    } else {
+      return [];
+    }
+    
+    return this.workTypesRepository
+      .createQueryBuilder('workType')
+      .where('workType.workTypeId IN (:...ids)', { ids: workTypeIds })
+      .orderBy('workType.workTypeId', 'ASC')
+      .getMany();
   }
 
   async findAll(): Promise<Employee[]> {

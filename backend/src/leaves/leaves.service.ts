@@ -218,14 +218,16 @@ export class LeavesService {
       const startDate = updateLeaveDto.startDate ? new Date(updateLeaveDto.startDate) : leave.startDate;
       const endDate = updateLeaveDto.endDate ? new Date(updateLeaveDto.endDate) : leave.endDate;
 
-      const conflictingLeaves = await this.leaveRepository.find({
-        where: {
-          employee: { personalNumber: leave.employee.personalNumber },
-          leaveId: () => `leave_id != ${id}`,
-          startDate: LessThanOrEqual(endDate),
-          endDate: MoreThanOrEqual(startDate),
-        }
-      });
+      // ЗАМЕНИТЕ ЭТОТ БЛОК КОДА:
+      const conflictingLeaves = await this.leaveRepository
+        .createQueryBuilder('leave')
+        .where('leave.employee.personalNumber = :personalNumber', { 
+          personalNumber: leave.employee.personalNumber 
+        })
+        .andWhere('leave.leaveId != :leaveId', { leaveId: id })
+        .andWhere('leave.startDate <= :endDate', { endDate })
+        .andWhere('leave.endDate >= :startDate', { startDate })
+        .getMany();
 
       if (conflictingLeaves.length > 0) {
         throw new ConflictException({
@@ -243,6 +245,7 @@ export class LeavesService {
     leave.updatedAt = new Date();
     return await this.leaveRepository.save(leave);
   }
+  
 
   // Удалить отпуск
   async remove(id: number): Promise<void> {
