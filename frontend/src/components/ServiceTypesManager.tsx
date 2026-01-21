@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../store';
+import { RootState, AppDispatch } from '../redux/store';
 import { 
   fetchServiceTypes, 
   createServiceType, 
   updateServiceType, 
   deleteServiceType 
-} from '../store/serviceTypesSlice';
+} from '../redux/slices/serviceTypesSlice';
+import styles from './ServiceTypesManager.module.scss';
 
 const ServiceTypesManager: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -53,13 +54,13 @@ const ServiceTypesManager: React.FC = () => {
   }
 
   return (
-    <div className="service-types-manager">
+    <div className={styles.serviceTypesManager}>
       <h2>Управление типами служб</h2>
       
       {/* Форма создания */}
-      <div className="create-form">
+      <div className={styles.createForm}>
         <h3>Создать новый тип службы</h3>
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <input
             type="number"
             placeholder="ID типа службы"
@@ -83,9 +84,9 @@ const ServiceTypesManager: React.FC = () => {
       </div>
 
       {/* Список типов служб */}
-      <div className="service-types-list">
+      <div className={styles.serviceTypesList}>
         <h3>Существующие типы служб</h3>
-        <table className="service-types-table">
+        <table className={styles.serviceTypesTable}>
           <thead>
             <tr>
               <th>ID</th>
@@ -108,7 +109,7 @@ const ServiceTypesManager: React.FC = () => {
                     serviceType.serviceTypeName
                   )}
                 </td>
-                <td className="actions">
+                <td className={styles.actions}>
                   {editingId === serviceType.serviceTypeId ? (
                     <>
                       <button onClick={() => handleUpdate(serviceType.serviceTypeId)}>
@@ -131,7 +132,7 @@ const ServiceTypesManager: React.FC = () => {
                       </button>
                       <button 
                         onClick={() => handleDelete(serviceType.serviceTypeId)}
-                        className="delete-btn"
+                        className={styles.deleteBtn}
                       >
                         Удалить
                       </button>
@@ -143,101 +144,6 @@ const ServiceTypesManager: React.FC = () => {
           </tbody>
         </table>
       </div>
-
-      <style jsx>{`
-        .service-types-manager {
-          padding: 20px;
-          max-width: 800px;
-          margin: 0 auto;
-        }
-        
-        h2, h3 {
-          color: #333;
-          margin-bottom: 20px;
-        }
-        
-        .create-form {
-          margin-bottom: 30px;
-          padding: 20px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          background-color: #f9f9f9;
-        }
-        
-        .form-group {
-          display: flex;
-          gap: 10px;
-          align-items: flex-end;
-        }
-        
-        input {
-          padding: 8px 12px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 14px;
-        }
-        
-        input[type="number"] {
-          width: 100px;
-        }
-        
-        input[type="text"] {
-          flex-grow: 1;
-        }
-        
-        button {
-          padding: 8px 16px;
-          background-color: #007bff;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-        }
-        
-        button:hover {
-          background-color: #0056b3;
-        }
-        
-        .delete-btn {
-          background-color: #dc3545;
-        }
-        
-        .delete-btn:hover {
-          background-color: #c82333;
-        }
-        
-        .service-types-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        
-        .service-types-table th,
-        .service-types-table td {
-          border: 1px solid #ddd;
-          padding: 10px;
-          text-align: left;
-        }
-        
-        .service-types-table th {
-          background-color: #f2f2f2;
-          font-weight: bold;
-        }
-        
-        .service-types-table tr:nth-child(even) {
-          background-color: #f9f9f9;
-        }
-        
-        .service-types-table tr:hover {
-          background-color: #f1f1f1;
-        }
-        
-        .actions {
-          display: flex;
-          gap: 5px;
-        }
-      `}</style>
     </div>
   );
 };

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../store';
-import { createEmployee, fetchWorkTypes, clearError, clearSuccessMessage } from '../store/employeesSlice';
+import { RootState, AppDispatch } from '../redux/store';
+import { createEmployee, fetchWorkTypes, clearError, clearSuccessMessage } from '../redux/slices/employeesSlice';
+import styles from './AddEmployeeForm.module.scss';
 
 const AddEmployeeForm: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -122,11 +123,11 @@ const AddEmployeeForm: React.FC = () => {
   };
 
   return (
-    <div className="container">
+    <div className={styles.addEmployeeForm}>
       <h1>Добавить сотрудника</h1>
       
       {error && (
-        <div className="error-message">
+        <div className={styles.errorMessage}>
           {error.includes('Сотрудник с таким личным номером уже существует') ? (
             <div>
               <strong>Ошибка:</strong> Сотрудник с таким личным номером уже существует!
@@ -138,14 +139,14 @@ const AddEmployeeForm: React.FC = () => {
       )}
       
       {successMessage && (
-        <div className="success-message">
+        <div className={styles.successMessage}>
           {successMessage}
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
         {/* Служба */}
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label>Служба:</label>
           <select
             name="service_type_id"
@@ -160,7 +161,7 @@ const AddEmployeeForm: React.FC = () => {
         </div>
 
         {/* Вид службы */}
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label>Вид службы:</label>
           <select
             name="work_type_id"
@@ -179,7 +180,7 @@ const AddEmployeeForm: React.FC = () => {
         </div>
 
         {/* Должность */}
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label>Должность:</label>
           <select
             name="position"
@@ -196,7 +197,7 @@ const AddEmployeeForm: React.FC = () => {
         </div>
 
         {/* ФИО */}
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label>ФИО:</label>
           <input
             type="text"
@@ -208,7 +209,7 @@ const AddEmployeeForm: React.FC = () => {
         </div>
 
         {/* Личный номер */}
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label>Личный номер:</label>
           <input
             type="number"
@@ -220,7 +221,7 @@ const AddEmployeeForm: React.FC = () => {
         </div>
 
         {/* Бригада */}
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label>Бригада:</label>
           <select
             name="brigada_id"
@@ -236,14 +237,14 @@ const AddEmployeeForm: React.FC = () => {
         </div>
 
         {/* Фото */}
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label>Фото:</label>
           <input
             type="file"
             accept="image/*"
             onChange={handlePhotoChange}
           />
-          <img src={photoPreview} alt="Preview" style={{ maxWidth: '200px', marginTop: '10px' }} />
+          <img src={photoPreview} alt="Preview" className={styles.photoPreview} />
         </div>
 
         {/* Кнопка отправки */}

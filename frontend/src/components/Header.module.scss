@@ -1,0 +1,156 @@
+// Header.module.scss
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
+  }
+  
+  .logo {
+    a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: white;
+      font-weight: 700;
+      font-size: 1.2rem;
+      
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+    
+    .logoIcon {
+      font-size: 1.5rem;
+    }
+    
+    .logoText {
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+  }
+  
+  .menuButton {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+    
+    @media (max-width: 768px) {
+      display: block;
+    }
+  }
+  
+  .nav {
+    @media (max-width: 768px) {
+      position: fixed;
+      top: 70px;
+      left: 0;
+      right: 0;
+      background: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      
+      &.navOpen {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+      }
+    }
+    
+    .navList {
+      display: flex;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      gap: 5px;
+      
+      @media (max-width: 768px) {
+        flex-direction: column;
+        padding: 20px;
+      }
+    }
+    
+    .navItem {
+      @media (max-width: 768px) {
+        width: 100%;
+      }
+    }
+    
+    .navLink {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      text-decoration: none;
+      color: white;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      
+      @media (max-width: 768px) {
+        color: #333;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 5px;
+        
+        &:hover {
+          background: #f8f9fa;
+        }
+      }
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      &.active {
+        background: rgba(255, 255, 255, 0.2);
+        font-weight: 600;
+        
+        @media (max-width: 768px) {
+          background: #e9ecef;
+          color: #667eea;
+        }
+      }
+      
+      .navIcon {
+        font-size: 1.1rem;
+        
+        @media (max-width: 768px) {
+          font-size: 1.2rem;
+        }
+      }
+      
+      .navLabel {
+        @media (max-width: 768px) {
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+  
+  @media (min-width: 769px) {
+    .navList {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+  }
+}

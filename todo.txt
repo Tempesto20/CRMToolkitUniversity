@@ -27,6 +27,11 @@ FRONTEND
 npx create-react-app cats-market-frontend --template typescript
 cd cats-market-frontend
 
+
+# Установка стилей
+npm install sass
+
+
 # Установка зависимостей для работы с API
 npm install axios
 npm install @types/axios

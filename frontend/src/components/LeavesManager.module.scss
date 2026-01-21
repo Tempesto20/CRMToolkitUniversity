@@ -1,0 +1,272 @@
+// LeavesManager.module.scss
+.leavesManager {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  
+  h2, h3, h4, h5 {
+    color: #333;
+    margin-bottom: 15px;
+  }
+  
+  .createForm, .filtersSection {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  }
+  
+  .formGrid, .filterGrid {
+    display: grid;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .formGrid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  .filterGrid {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  }
+  
+  .formGroup, .filterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .formGroup {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  label {
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 5px;
+  }
+  
+  input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  input[type="number"] {
+    width: 120px;
+  }
+  
+  input[type="date"] {
+    width: 150px;
+  }
+  
+  button {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
+  .deleteBtn {
+    background-color: #dc3545;
+  }
+  
+  .deleteBtn:hover {
+    background-color: #c82333;
+  }
+  
+  .viewToggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .viewToggle button {
+    background-color: #6c757d;
+  }
+  
+  .viewToggle button.active {
+    background-color: #007bff;
+  }
+  
+  .employeeLeaves {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #e7f3ff;
+    border-radius: 4px;
+  }
+  
+  .employeeLeaves ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .employeeLeaves li {
+    padding: 5px 0;
+    border-bottom: 1px solid #d1e7ff;
+  }
+  
+  .employeeLeaves li:last-child {
+    border-bottom: none;
+  }
+  
+  .statsSection {
+    margin-top: 20px;
+  }
+  
+  .statsCards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  
+  .statCard {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+  }
+  
+  .statNumber {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 10px 0 0 0;
+  }
+  
+  .statNumber.active {
+    color: #28a745;
+  }
+  
+  .statNumber.completed {
+    color: #6c757d;
+  }
+  
+  .typeStats {
+    margin-top: 30px;
+  }
+  
+  .typeStatsTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  
+  .typeStatsTable th,
+  .typeStatsTable td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .typeStatsTable th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  .leavesTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  
+  .leavesTable th,
+  .leavesTable td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+  }
+  
+  .leavesTable th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  .leavesTable tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .leavesTable tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  .leavesTable tr.currentLeave {
+    background-color: #fff3cd;
+  }
+  
+  .dateEdit {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .statusCurrent, .statusActive, .statusCompleted {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  .statusCurrent {
+    background-color: #ffc107;
+    color: #856404;
+  }
+  
+  .statusActive {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .statusCompleted {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 5px;
+    min-width: 180px;
+  }
+  
+  @media (max-width: 768px) {
+    .formGroup {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    input {
+      width: 100%;
+    }
+    
+    button {
+      width: 100%;
+      margin-top: 5px;
+    }
+    
+    .actions {
+      flex-direction: column;
+      min-width: 120px;
+    }
+    
+    .leavesTable {
+      display: block;
+      overflow-x: auto;
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../store';
+import { RootState, AppDispatch } from '../redux/store';
 import { 
   fetchLocationWorks, 
   fetchLocationWorksWithStats,
@@ -9,7 +9,8 @@ import {
   deleteLocationWork,
   searchLocationWorks,
   clearSearchResults
-} from '../store/locationWorkSlice';
+} from '../redux/slices/locationWorkSlice';
+import styles from './LocationWorkManager.module.scss';
 
 const LocationWorkManager: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -71,13 +72,13 @@ const LocationWorkManager: React.FC = () => {
   const showStats = viewMode === 'stats' && locationWorksWithStats.length > 0;
 
   return (
-    <div className="location-work-manager">
+    <div className={styles.locationWorkManager}>
       <h2>Управление местами работы</h2>
       
       {/* Форма создания */}
-      <div className="create-form">
+      <div className={styles.createForm}>
         <h3>Добавить новое место работы</h3>
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <input
             type="text"
             placeholder="Название места работы"
@@ -89,9 +90,9 @@ const LocationWorkManager: React.FC = () => {
       </div>
 
       {/* Поиск */}
-      <div className="search-section">
+      <div className={styles.searchSection}>
         <h3>Поиск мест работы</h3>
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <input
             type="text"
             placeholder="Введите название места работы"
@@ -107,15 +108,15 @@ const LocationWorkManager: React.FC = () => {
       </div>
 
       {/* Переключение режимов просмотра */}
-      <div className="view-toggle">
+      <div className={styles.viewToggle}>
         <button
-          className={viewMode === 'list' ? 'active' : ''}
+          className={viewMode === 'list' ? styles.active : ''}
           onClick={() => setViewMode('list')}
         >
           Список
         </button>
         <button
-          className={viewMode === 'stats' ? 'active' : ''}
+          className={viewMode === 'stats' ? styles.active : ''}
           onClick={() => setViewMode('stats')}
         >
           Статистика
@@ -124,9 +125,9 @@ const LocationWorkManager: React.FC = () => {
 
       {/* Таблица статистики */}
       {showStats && (
-        <div className="stats-section">
+        <div className={styles.statsSection}>
           <h3>Статистика по местам работы</h3>
-          <table className="stats-table">
+          <table className={styles.statsTable}>
             <thead>
               <tr>
                 <th>Место работы</th>
@@ -140,10 +141,10 @@ const LocationWorkManager: React.FC = () => {
                 <tr key={location.locationId}>
                   <td>{location.locationname}</td>
                   <td>{location.locomotivecount}</td>
-                  <td className={location.operationalcount > 0 ? 'positive' : ''}>
+                  <td className={location.operationalcount > 0 ? styles.positive : ''}>
                     {location.operationalcount}
                   </td>
-                  <td className={location.indepotcount > 0 ? 'warning' : ''}>
+                  <td className={location.indepotcount > 0 ? styles.warning : ''}>
                     {location.indepotcount}
                   </td>
                 </tr>
@@ -155,7 +156,7 @@ const LocationWorkManager: React.FC = () => {
 
       {/* Список мест работы */}
       {!showStats && (
-        <div className="locations-list">
+        <div className={styles.locationsList}>
           <h3>
             {searchTerm ? 'Результаты поиска' : 'Все места работы'} 
             ({locationsToShow.length})
@@ -164,7 +165,7 @@ const LocationWorkManager: React.FC = () => {
           {locationsToShow.length === 0 ? (
             <p>Места работы не найдены</p>
           ) : (
-            <table className="locations-table">
+            <table className={styles.locationsTable}>
               <thead>
                 <tr>
                   <th>ID</th>
@@ -188,7 +189,7 @@ const LocationWorkManager: React.FC = () => {
                         location.locationName
                       )}
                     </td>
-                    <td className="actions">
+                    <td className={styles.actions}>
                       {editingId === location.locationId ? (
                         <>
                           <button onClick={() => handleUpdate(location.locationId)}>
@@ -211,7 +212,7 @@ const LocationWorkManager: React.FC = () => {
                           </button>
                           <button 
                             onClick={() => handleDelete(location.locationId)}
-                            className="delete-btn"
+                            className={styles.deleteBtn}
                           >
                             Удалить
                           </button>
@@ -225,143 +226,6 @@ const LocationWorkManager: React.FC = () => {
           )}
         </div>
       )}
-
-      <style jsx>{`
-        .location-work-manager {
-          padding: 20px;
-          max-width: 1000px;
-          margin: 0 auto;
-        }
-        
-        h2, h3 {
-          color: #333;
-          margin-bottom: 20px;
-        }
-        
-        .create-form, .search-section {
-          margin-bottom: 30px;
-          padding: 20px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          background-color: #f9f9f9;
-        }
-        
-        .form-group {
-          display: flex;
-          gap: 10px;
-          align-items: center;
-        }
-        
-        input {
-          padding: 8px 12px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 14px;
-          flex-grow: 1;
-        }
-        
-        button {
-          padding: 8px 16px;
-          background-color: #007bff;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-        }
-        
-        button:hover {
-          background-color: #0056b3;
-        }
-        
-        .delete-btn {
-          background-color: #dc3545;
-        }
-        
-        .delete-btn:hover {
-          background-color: #c82333;
-        }
-        
-        .view-toggle {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 20px;
-        }
-        
-        .view-toggle button {
-          background-color: #6c757d;
-        }
-        
-        .view-toggle button.active {
-          background-color: #007bff;
-        }
-        
-        .stats-section, .locations-list {
-          margin-top: 20px;
-        }
-        
-        .stats-table, .locations-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        
-        .stats-table th,
-        .stats-table td,
-        .locations-table th,
-        .locations-table td {
-          border: 1px solid #ddd;
-          padding: 10px;
-          text-align: left;
-        }
-        
-        .stats-table th,
-        .locations-table th {
-          background-color: #f2f2f2;
-          font-weight: bold;
-        }
-        
-        .stats-table tr:nth-child(even),
-        .locations-table tr:nth-child(even) {
-          background-color: #f9f9f9;
-        }
-        
-        .stats-table tr:hover,
-        .locations-table tr:hover {
-          background-color: #f1f1f1;
-        }
-        
-        .stats-table td.positive {
-          color: #28a745;
-          font-weight: bold;
-        }
-        
-        .stats-table td.warning {
-          color: #ffc107;
-          font-weight: bold;
-        }
-        
-        .actions {
-          display: flex;
-          gap: 5px;
-          min-width: 180px;
-        }
-        
-        @media (max-width: 768px) {
-          .form-group {
-            flex-direction: column;
-            align-items: stretch;
-          }
-          
-          button {
-            width: 100%;
-          }
-          
-          .actions {
-            flex-direction: column;
-          }
-        }
-      `}</style>
     </div>
   );
 };

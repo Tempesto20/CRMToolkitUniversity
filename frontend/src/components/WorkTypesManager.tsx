@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../store';
+import { RootState, AppDispatch } from '../redux/store';
 import { 
   fetchWorkTypes, 
   createWorkType, 
   updateWorkType, 
   deleteWorkType,
   fetchWorkTypesByService 
-} from '../store/workTypesSlice';
+} from '../redux/slices/workTypesSlice';
+import styles from './WorkTypesManager.module.scss';
 
 const WorkTypesManager: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -61,13 +62,13 @@ const WorkTypesManager: React.FC = () => {
   }
 
   return (
-    <div className="work-types-manager">
+    <div className={styles.workTypesManager}>
       <h2>Управление видами работ</h2>
       
       {/* Форма создания */}
-      <div className="create-form">
+      <div className={styles.createForm}>
         <h3>Создать новый вид работ</h3>
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <input
             type="number"
             placeholder="ID вида работ"
@@ -91,9 +92,9 @@ const WorkTypesManager: React.FC = () => {
       </div>
 
       {/* Фильтр по службе */}
-      <div className="filter-section">
+      <div className={styles.filterSection}>
         <h3>Поиск видов работ по службе</h3>
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <select 
             value={serviceTypeId} 
             onChange={(e) => setServiceTypeId(e.target.value)}
@@ -106,7 +107,7 @@ const WorkTypesManager: React.FC = () => {
         </div>
         
         {workTypesByService.length > 0 && (
-          <div className="service-work-types">
+          <div className={styles.serviceWorkTypes}>
             <h4>Виды работ для выбранной службы:</h4>
             <ul>
               {workTypesByService.map((workType) => (
@@ -120,9 +121,9 @@ const WorkTypesManager: React.FC = () => {
       </div>
 
       {/* Список всех видов работ */}
-      <div className="work-types-list">
+      <div className={styles.workTypesList}>
         <h3>Все виды работ</h3>
-        <table className="work-types-table">
+        <table className={styles.workTypesTable}>
           <thead>
             <tr>
               <th>ID</th>
@@ -145,7 +146,7 @@ const WorkTypesManager: React.FC = () => {
                     workType.workTypeName
                   )}
                 </td>
-                <td className="actions">
+                <td className={styles.actions}>
                   {editingId === workType.workTypeId ? (
                     <>
                       <button onClick={() => handleUpdate(workType.workTypeId)}>
@@ -168,7 +169,7 @@ const WorkTypesManager: React.FC = () => {
                       </button>
                       <button 
                         onClick={() => handleDelete(workType.workTypeId)}
-                        className="delete-btn"
+                        className={styles.deleteBtn}
                       >
                         Удалить
                       </button>
@@ -180,129 +181,6 @@ const WorkTypesManager: React.FC = () => {
           </tbody>
         </table>
       </div>
-
-      <style jsx>{`
-        .work-types-manager {
-          padding: 20px;
-          max-width: 900px;
-          margin: 0 auto;
-        }
-        
-        h2, h3, h4 {
-          color: #333;
-          margin-bottom: 15px;
-        }
-        
-        .create-form, .filter-section {
-          margin-bottom: 30px;
-          padding: 20px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          background-color: #f9f9f9;
-        }
-        
-        .form-group {
-          display: flex;
-          gap: 10px;
-          align-items: center;
-          margin-bottom: 15px;
-        }
-        
-        input, select {
-          padding: 8px 12px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 14px;
-        }
-        
-        input[type="number"] {
-          width: 100px;
-        }
-        
-        input[type="text"] {
-          flex-grow: 1;
-          min-width: 200px;
-        }
-        
-        select {
-          width: 250px;
-        }
-        
-        button {
-          padding: 8px 16px;
-          background-color: #007bff;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-        }
-        
-        button:hover {
-          background-color: #0056b3;
-        }
-        
-        .delete-btn {
-          background-color: #dc3545;
-        }
-        
-        .delete-btn:hover {
-          background-color: #c82333;
-        }
-        
-        .service-work-types {
-          margin-top: 15px;
-          padding: 15px;
-          background-color: #e9f7ef;
-          border-radius: 4px;
-        }
-        
-        .service-work-types ul {
-          list-style: none;
-          padding: 0;
-          margin: 10px 0 0 0;
-        }
-        
-        .service-work-types li {
-          padding: 8px 12px;
-          background-color: white;
-          border: 1px solid #ddd;
-          margin-bottom: 5px;
-          border-radius: 4px;
-        }
-        
-        .work-types-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        
-        .work-types-table th,
-        .work-types-table td {
-          border: 1px solid #ddd;
-          padding: 10px;
-          text-align: left;
-        }
-        
-        .work-types-table th {
-          background-color: #f2f2f2;
-          font-weight: bold;
-        }
-        
-        .work-types-table tr:nth-child(even) {
-          background-color: #f9f9f9;
-        }
-        
-        .work-types-table tr:hover {
-          background-color: #f1f1f1;
-        }
-        
-        .actions {
-          display: flex;
-          gap: 5px;
-          min-width: 180px;
-        }
-      `}</style>
     </div>
   );
 };

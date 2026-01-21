@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
 import { fetchBrigadas, createBrigada, deleteBrigada } from '../redux/slices/brigadaSlice';
+import styles from './BrigadaComponent.module.scss';
 
 const BrigadaComponent: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -30,27 +31,43 @@ const BrigadaComponent: React.FC = () => {
   }
 
   return (
-    <div>
-      <h1>Бригады</h1>
+    <div className={styles.brigadaManager}>
+      <h1>Управление бригадами</h1>
       
-      <div>
-        <input
-          type="text"
-          value={newBrigadaName}
-          onChange={(e) => setNewBrigadaName(e.target.value)}
-          placeholder="Название бригады"
-        />
-        <button onClick={handleCreate}>Создать</button>
+      <div className={styles.createSection}>
+        <h2>Создать новую бригаду</h2>
+        <div className={styles.formGroup}>
+          <input
+            type="text"
+            value={newBrigadaName}
+            onChange={(e) => setNewBrigadaName(e.target.value)}
+            placeholder="Введите название бригады"
+          />
+          <button onClick={handleCreate}>Создать</button>
+        </div>
       </div>
 
-      <ul>
-        {brigadas.map((brigada) => (
-          <li key={brigada.brigadaId}>
-            {brigada.brigadaName} (ID: {brigada.brigadaId})
-            <button onClick={() => handleDelete(brigada.brigadaId)}>Удалить</button>
-          </li>
-        ))}
-      </ul>
+      <div className={styles.brigadasList}>
+        <h2>Список бригад ({brigadas.length})</h2>
+        <ul>
+          {brigadas.map((brigada) => (
+            <li key={brigada.brigadaId}>
+              <div className={styles.brigadaInfo}>
+                <strong>{brigada.brigadaName}</strong>
+                <div style={{ fontSize: '12px', color: '#666' }}>ID: {brigada.brigadaId}</div>
+              </div>
+              <div className={styles.brigadaActions}>
+                <button 
+                  onClick={() => handleDelete(brigada.brigadaId)}
+                  className={styles.deleteBtn}
+                >
+                  Удалить
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

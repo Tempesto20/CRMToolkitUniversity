@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../store';
+import { RootState, AppDispatch } from '../redux/store';
 import { 
   fetchLocomotives, 
   createLocomotive, 
@@ -8,7 +8,8 @@ import {
   deleteLocomotive,
   fetchAvailableLocomotives,
   fetchLocomotivesByService 
-} from '../store/locomotivesSlice';
+} from '../redux/slices/locomotivesSlice';
+import styles from './LocomotivesManager.module.scss';
 
 const LocomotivesManager: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -107,14 +108,14 @@ const LocomotivesManager: React.FC = () => {
   }
 
   return (
-    <div className="locomotives-manager">
+    <div className={styles.locomotivesManager}>
       <h2>Управление локомотивами</h2>
       
       {/* Форма создания */}
-      <div className="create-form">
+      <div className={styles.createForm}>
         <h3>Добавить новый локомотив</h3>
-        <div className="form-grid">
-          <div className="form-group">
+        <div className={styles.formGrid}>
+          <div className={styles.formGroup}>
             <label>ID локомотива:</label>
             <input
               type="text"
@@ -128,7 +129,7 @@ const LocomotivesManager: React.FC = () => {
             />
           </div>
           
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Название:</label>
             <input
               type="text"
@@ -141,7 +142,7 @@ const LocomotivesManager: React.FC = () => {
             />
           </div>
           
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Тип:</label>
             <input
               type="text"
@@ -154,7 +155,7 @@ const LocomotivesManager: React.FC = () => {
             />
           </div>
           
-          <div className="form-group checkbox-group">
+          <div className={`${styles.formGroup} ${styles.checkboxGroup}`}>
             <label>
               <input
                 type="checkbox"
@@ -179,7 +180,7 @@ const LocomotivesManager: React.FC = () => {
             </label>
           </div>
           
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>ID местоположения:</label>
             <input
               type="number"
@@ -192,7 +193,7 @@ const LocomotivesManager: React.FC = () => {
             />
           </div>
           
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>ID службы:</label>
             <input
               type="number"
@@ -205,7 +206,7 @@ const LocomotivesManager: React.FC = () => {
             />
           </div>
           
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>ID вида работ:</label>
             <input
               type="number"
@@ -222,14 +223,14 @@ const LocomotivesManager: React.FC = () => {
       </div>
 
       {/* Фильтры */}
-      <div className="filters-section">
+      <div className={styles.filtersSection}>
         <h3>Фильтры</h3>
-        <div className="filter-buttons">
+        <div className={styles.filterButtons}>
           <button onClick={handleFetchAvailable}>
             Показать доступные локомотивы
           </button>
           
-          <div className="service-filter">
+          <div className={styles.serviceFilter}>
             <select 
               value={serviceTypeId} 
               onChange={(e) => setServiceTypeId(e.target.value)}
@@ -251,13 +252,13 @@ const LocomotivesManager: React.FC = () => {
       </div>
 
       {/* Список локомотивов */}
-      <div className="locomotives-list">
+      <div className={styles.locomotivesList}>
         <h3>
           {showAvailable ? 'Доступные локомотивы' : 'Все локомотивы'} 
           ({showAvailable ? availableLocomotives.length : locomotives.length})
         </h3>
         
-        <table className="locomotives-table">
+        <table className={styles.locomotivesTable}>
           <thead>
             <tr>
               <th>ID</th>
@@ -273,7 +274,7 @@ const LocomotivesManager: React.FC = () => {
             {(showAvailable ? availableLocomotives : locomotives).map((loc) => (
               <tr 
                 key={loc.locomotiveId}
-                className={!loc.operationalStatus ? 'inactive' : ''}
+                className={!loc.operationalStatus ? styles.inactive : ''}
               >
                 <td>{loc.locomotiveId}</td>
                 <td>
@@ -326,7 +327,7 @@ const LocomotivesManager: React.FC = () => {
                     loc.locomotiveDepo ? 'Да' : 'Нет'
                   )}
                 </td>
-                <td className="actions">
+                <td className={styles.actions}>
                   {editingId === loc.locomotiveId ? (
                     <>
                       <button onClick={() => handleUpdate(loc.locomotiveId)}>
@@ -346,7 +347,7 @@ const LocomotivesManager: React.FC = () => {
                       </button>
                       <button 
                         onClick={() => handleDelete(loc.locomotiveId)}
-                        className="delete-btn"
+                        className={styles.deleteBtn}
                       >
                         Удалить
                       </button>
@@ -358,140 +359,6 @@ const LocomotivesManager: React.FC = () => {
           </tbody>
         </table>
       </div>
-
-      <style jsx>{`
-        .locomotives-manager {
-          padding: 20px;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-        
-        h2, h3 {
-          color: #333;
-          margin-bottom: 20px;
-        }
-        
-        .create-form {
-          margin-bottom: 30px;
-          padding: 20px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          background-color: #f9f9f9;
-        }
-        
-        .form-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 15px;
-          margin-bottom: 20px;
-        }
-        
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-        }
-        
-        .checkbox-group {
-          flex-direction: row;
-          align-items: center;
-          gap: 15px;
-          flex-wrap: wrap;
-        }
-        
-        label {
-          font-weight: 500;
-          color: #555;
-        }
-        
-        input, select {
-          padding: 8px 12px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 14px;
-        }
-        
-        input[type="checkbox"] {
-          margin-right: 5px;
-        }
-        
-        button {
-          padding: 8px 16px;
-          background-color: #007bff;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-        }
-        
-        button:hover {
-          background-color: #0056b3;
-        }
-        
-        .delete-btn {
-          background-color: #dc3545;
-        }
-        
-        .delete-btn:hover {
-          background-color: #c82333;
-        }
-        
-        .filters-section {
-          margin-bottom: 20px;
-          padding: 15px;
-          background-color: #f0f8ff;
-          border-radius: 5px;
-        }
-        
-        .filter-buttons {
-          display: flex;
-          gap: 10px;
-          align-items: center;
-          flex-wrap: wrap;
-        }
-        
-        .service-filter {
-          display: flex;
-          gap: 10px;
-        }
-        
-        .locomotives-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        
-        .locomotives-table th,
-        .locomotives-table td {
-          border: 1px solid #ddd;
-          padding: 10px;
-          text-align: left;
-        }
-        
-        .locomotives-table th {
-          background-color: #f2f2f2;
-          font-weight: bold;
-        }
-        
-        .locomotives-table tr:nth-child(even) {
-          background-color: #f9f9f9;
-        }
-        
-        .locomotives-table tr:hover {
-          background-color: #f1f1f1;
-        }
-        
-        .locomotives-table tr.inactive {
-          background-color: #ffe6e6;
-        }
-        
-        .actions {
-          display: flex;
-          gap: 5px;
-          min-width: 180px;
-        }
-      `}</style>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../store';
+import { RootState, AppDispatch } from '../redux/store';
 import { 
   fetchLeaveTypes, 
   fetchLeaveTypesStats,
@@ -9,7 +9,8 @@ import {
   deleteLeaveType,
   searchLeaveTypes,
   clearSearchResults
-} from '../store/leaveTypesSlice';
+} from '../redux/slices/leaveTypesSlice';
+import styles from './LeaveTypesManager.module.scss';
 
 const LeaveTypesManager: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -92,14 +93,14 @@ const LeaveTypesManager: React.FC = () => {
   const showStats = viewMode === 'stats' && leaveTypesStats.length > 0;
 
   return (
-    <div className="leave-types-manager">
+    <div className={styles.leaveTypesManager}>
       <h2>Управление типами отпусков</h2>
       
       {/* Форма создания */}
-      <div className="create-form">
+      <div className={styles.createForm}>
         <h3>Добавить новый тип отпуска</h3>
-        <div className="form-grid">
-          <div className="form-group">
+        <div className={styles.formGrid}>
+          <div className={styles.formGroup}>
             <label>ID типа отпуска:</label>
             <input
               type="number"
@@ -112,7 +113,7 @@ const LeaveTypesManager: React.FC = () => {
             />
           </div>
           
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Название типа:</label>
             <input
               type="text"
@@ -125,7 +126,7 @@ const LeaveTypesManager: React.FC = () => {
             />
           </div>
           
-          <div className="form-group full-width">
+          <div className={`${styles.formGroup} ${styles.fullWidth}`}>
             <label>Описание:</label>
             <textarea
               placeholder="Описание типа отпуска"
@@ -142,9 +143,9 @@ const LeaveTypesManager: React.FC = () => {
       </div>
 
       {/* Поиск */}
-      <div className="search-section">
+      <div className={styles.searchSection}>
         <h3>Поиск типов отпусков</h3>
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <input
             type="text"
             placeholder="Поиск по названию или описанию"
@@ -160,15 +161,15 @@ const LeaveTypesManager: React.FC = () => {
       </div>
 
       {/* Переключение режимов просмотра */}
-      <div className="view-toggle">
+      <div className={styles.viewToggle}>
         <button
-          className={viewMode === 'list' ? 'active' : ''}
+          className={viewMode === 'list' ? styles.active : ''}
           onClick={() => setViewMode('list')}
         >
           Список
         </button>
         <button
-          className={viewMode === 'stats' ? 'active' : ''}
+          className={viewMode === 'stats' ? styles.active : ''}
           onClick={() => setViewMode('stats')}
         >
           Статистика
@@ -177,9 +178,9 @@ const LeaveTypesManager: React.FC = () => {
 
       {/* Таблица статистики */}
       {showStats && (
-        <div className="stats-section">
+        <div className={styles.statsSection}>
           <h3>Статистика по типам отпусков</h3>
-          <table className="stats-table">
+          <table className={styles.statsTable}>
             <thead>
               <tr>
                 <th>Тип отпуска</th>
@@ -193,10 +194,10 @@ const LeaveTypesManager: React.FC = () => {
                 <tr key={stat.leaveTypeId}>
                   <td><strong>{stat.leavetypename}</strong></td>
                   <td>{stat.description || '-'}</td>
-                  <td className={stat.totalleaves > 0 ? 'positive' : ''}>
+                  <td className={stat.totalleaves > 0 ? styles.positive : ''}>
                     {stat.totalleaves}
                   </td>
-                  <td className={stat.activeleaves > 0 ? 'active' : ''}>
+                  <td className={stat.activeleaves > 0 ? styles.active : ''}>
                     {stat.activeleaves}
                   </td>
                 </tr>
@@ -208,7 +209,7 @@ const LeaveTypesManager: React.FC = () => {
 
       {/* Список типов отпусков */}
       {!showStats && (
-        <div className="leave-types-list">
+        <div className={styles.leaveTypesList}>
           <h3>
             {searchTerm ? 'Результаты поиска' : 'Все типы отпусков'} 
             ({leaveTypesToShow.length})
@@ -217,7 +218,7 @@ const LeaveTypesManager: React.FC = () => {
           {leaveTypesToShow.length === 0 ? (
             <p>Типы отпусков не найдены</p>
           ) : (
-            <table className="leave-types-table">
+            <table className={styles.leaveTypesTable}>
               <thead>
                 <tr>
                   <th>ID</th>
@@ -258,7 +259,7 @@ const LeaveTypesManager: React.FC = () => {
                         leaveType.description || <span style={{ color: '#999' }}>Нет описания</span>
                       )}
                     </td>
-                    <td className="actions">
+                    <td className={styles.actions}>
                       {editingId === leaveType.leaveTypeId ? (
                         <>
                           <button onClick={() => handleUpdate(leaveType.leaveTypeId)}>
@@ -278,7 +279,7 @@ const LeaveTypesManager: React.FC = () => {
                           </button>
                           <button 
                             onClick={() => handleDelete(leaveType.leaveTypeId)}
-                            className="delete-btn"
+                            className={styles.deleteBtn}
                           >
                             Удалить
                           </button>
@@ -292,174 +293,6 @@ const LeaveTypesManager: React.FC = () => {
           )}
         </div>
       )}
-
-      <style jsx>{`
-        .leave-types-manager {
-          padding: 20px;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-        
-        h2, h3 {
-          color: #333;
-          margin-bottom: 20px;
-        }
-        
-        .create-form, .search-section {
-          margin-bottom: 30px;
-          padding: 20px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          background-color: #f9f9f9;
-        }
-        
-        .form-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 15px;
-          margin-bottom: 20px;
-        }
-        
-        .full-width {
-          grid-column: 1 / -1;
-        }
-        
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-        }
-        
-        label {
-          font-weight: 500;
-          color: #555;
-        }
-        
-        input, textarea {
-          padding: 8px 12px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 14px;
-          font-family: inherit;
-        }
-        
-        textarea {
-          resize: vertical;
-        }
-        
-        button {
-          padding: 8px 16px;
-          background-color: #007bff;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-        }
-        
-        button:hover {
-          background-color: #0056b3;
-        }
-        
-        .delete-btn {
-          background-color: #dc3545;
-        }
-        
-        .delete-btn:hover {
-          background-color: #c82333;
-        }
-        
-        .view-toggle {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 20px;
-        }
-        
-        .view-toggle button {
-          background-color: #6c757d;
-        }
-        
-        .view-toggle button.active {
-          background-color: #007bff;
-        }
-        
-        .stats-section, .leave-types-list {
-          margin-top: 20px;
-        }
-        
-        .stats-table, .leave-types-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        
-        .stats-table th,
-        .stats-table td,
-        .leave-types-table th,
-        .leave-types-table td {
-          border: 1px solid #ddd;
-          padding: 12px;
-          text-align: left;
-        }
-        
-        .stats-table th,
-        .leave-types-table th {
-          background-color: #f2f2f2;
-          font-weight: bold;
-        }
-        
-        .stats-table tr:nth-child(even),
-        .leave-types-table tr:nth-child(even) {
-          background-color: #f9f9f9;
-        }
-        
-        .stats-table tr:hover,
-        .leave-types-table tr:hover {
-          background-color: #f1f1f1;
-        }
-        
-        .stats-table td.positive {
-          color: #28a745;
-          font-weight: bold;
-        }
-        
-        .stats-table td.active {
-          color: #17a2b8;
-          font-weight: bold;
-        }
-        
-        .actions {
-          display: flex;
-          gap: 5px;
-          min-width: 180px;
-        }
-        
-        @media (max-width: 768px) {
-          .form-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .form-group {
-            flex-direction: column;
-          }
-          
-          button {
-            width: 100%;
-            margin-top: 5px;
-          }
-          
-          .actions {
-            flex-direction: column;
-            min-width: 120px;
-          }
-          
-          .stats-table,
-          .leave-types-table {
-            display: block;
-            overflow-x: auto;
-          }
-        }
-      `}</style>
     </div>
   );
 };

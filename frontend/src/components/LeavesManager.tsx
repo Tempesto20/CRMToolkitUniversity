@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../store';
+import { RootState, AppDispatch } from '../redux/store';
 import { 
   fetchLeaves, 
   fetchActiveLeaves,
@@ -13,7 +13,8 @@ import {
   clearEmployeeLeaves,
   fetchLeavesByPeriod,
   clearLeavesByPeriod
-} from '../store/leavesSlice';
+} from '../redux/slices/leavesSlice';
+import styles from './LeavesManager.module.scss';
 
 const LeavesManager: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -131,14 +132,14 @@ const LeavesManager: React.FC = () => {
   };
 
   return (
-    <div className="leaves-manager">
+    <div className={styles.leavesManager}>
       <h2>Управление отпусками сотрудников</h2>
       
       {/* Форма создания */}
-      <div className="create-form">
+      <div className={styles.createForm}>
         <h3>Оформить новый отпуск</h3>
-        <div className="form-grid">
-          <div className="form-group">
+        <div className={styles.formGrid}>
+          <div className={styles.formGroup}>
             <label>Личный номер сотрудника:</label>
             <input
               type="number"
@@ -151,7 +152,7 @@ const LeavesManager: React.FC = () => {
             />
           </div>
           
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Тип отпуска (ID):</label>
             <input
               type="number"
@@ -164,7 +165,7 @@ const LeavesManager: React.FC = () => {
             />
           </div>
           
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Дата начала:</label>
             <input
               type="date"
@@ -176,7 +177,7 @@ const LeavesManager: React.FC = () => {
             />
           </div>
           
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Дата окончания:</label>
             <input
               type="date"
@@ -192,12 +193,12 @@ const LeavesManager: React.FC = () => {
       </div>
 
       {/* Поисковые фильтры */}
-      <div className="filters-section">
+      <div className={styles.filtersSection}>
         <h3>Фильтры и поиск</h3>
-        <div className="filter-grid">
-          <div className="filter-group">
+        <div className={styles.filterGrid}>
+          <div className={styles.filterGroup}>
             <h4>Поиск по сотруднику</h4>
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <input
                 type="number"
                 placeholder="Личный номер сотрудника"
@@ -213,7 +214,7 @@ const LeavesManager: React.FC = () => {
               )}
             </div>
             {employeeLeaves.length > 0 && (
-              <div className="employee-leaves">
+              <div className={styles.employeeLeaves}>
                 <h5>Отпуска сотрудника:</h5>
                 <ul>
                   {employeeLeaves.map((leave) => (
@@ -226,9 +227,9 @@ const LeavesManager: React.FC = () => {
             )}
           </div>
           
-          <div className="filter-group">
+          <div className={styles.filterGroup}>
             <h4>Поиск по периоду</h4>
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <input
                 type="date"
                 placeholder="Начало периода"
@@ -255,27 +256,27 @@ const LeavesManager: React.FC = () => {
       </div>
 
       {/* Переключение режимов просмотра */}
-      <div className="view-toggle">
+      <div className={styles.viewToggle}>
         <button
-          className={viewMode === 'all' ? 'active' : ''}
+          className={viewMode === 'all' ? styles.active : ''}
           onClick={() => setViewMode('all')}
         >
           Все отпуска
         </button>
         <button
-          className={viewMode === 'active' ? 'active' : ''}
+          className={viewMode === 'active' ? styles.active : ''}
           onClick={() => setViewMode('active')}
         >
           Активные
         </button>
         <button
-          className={viewMode === 'today' ? 'active' : ''}
+          className={viewMode === 'today' ? styles.active : ''}
           onClick={() => setViewMode('today')}
         >
           Сегодня
         </button>
         <button
-          className={viewMode === 'stats' ? 'active' : ''}
+          className={viewMode === 'stats' ? styles.active : ''}
           onClick={() => setViewMode('stats')}
         >
           Статистика
@@ -284,27 +285,27 @@ const LeavesManager: React.FC = () => {
 
       {/* Статистика */}
       {viewMode === 'stats' && stats && (
-        <div className="stats-section">
+        <div className={styles.statsSection}>
           <h3>Статистика отпусков</h3>
-          <div className="stats-cards">
-            <div className="stat-card">
+          <div className={styles.statsCards}>
+            <div className={styles.statCard}>
               <h4>Всего отпусков</h4>
-              <p className="stat-number">{stats.total}</p>
+              <p className={styles.statNumber}>{stats.total}</p>
             </div>
-            <div className="stat-card">
+            <div className={styles.statCard}>
               <h4>Активных</h4>
-              <p className="stat-number active">{stats.active}</p>
+              <p className={`${styles.statNumber} ${styles.active}`}>{stats.active}</p>
             </div>
-            <div className="stat-card">
+            <div className={styles.statCard}>
               <h4>Завершённых</h4>
-              <p className="stat-number completed">{stats.completed}</p>
+              <p className={`${styles.statNumber} ${styles.completed}`}>{stats.completed}</p>
             </div>
           </div>
           
           {stats.typeStats && stats.typeStats.length > 0 && (
-            <div className="type-stats">
+            <div className={styles.typeStats}>
               <h4>Распределение по типам</h4>
-              <table className="type-stats-table">
+              <table className={styles.typeStatsTable}>
                 <thead>
                   <tr>
                     <th>Тип отпуска</th>
@@ -327,7 +328,7 @@ const LeavesManager: React.FC = () => {
 
       {/* Список отпусков */}
       {viewMode !== 'stats' && (
-        <div className="leaves-list">
+        <div className={styles.leavesList}>
           <h3>
             {viewMode === 'all' && 'Все отпуска'}
             {viewMode === 'active' && 'Активные отпуска'}
@@ -338,7 +339,7 @@ const LeavesManager: React.FC = () => {
           {leavesToShow().length === 0 ? (
             <p>Отпуска не найдены</p>
           ) : (
-            <table className="leaves-table">
+            <table className={styles.leavesTable}>
               <thead>
                 <tr>
                   <th>Сотрудник</th>
@@ -360,7 +361,7 @@ const LeavesManager: React.FC = () => {
                   return (
                     <tr 
                       key={leave.leaveId}
-                      className={isCurrent ? 'current-leave' : ''}
+                      className={isCurrent ? styles.currentLeave : ''}
                     >
                       <td>
                         {leave.employee?.fullName || `№${leave.employee?.personalNumber}`}
@@ -382,7 +383,7 @@ const LeavesManager: React.FC = () => {
                       </td>
                       <td>
                         {editingId === leave.leaveId ? (
-                          <div className="date-edit">
+                          <div className={styles.dateEdit}>
                             <input
                               type="date"
                               value={editData.startDate}
@@ -410,14 +411,14 @@ const LeavesManager: React.FC = () => {
                       </td>
                       <td>
                         {isCurrent ? (
-                          <span className="status-current">Текущий</span>
+                          <span className={styles.statusCurrent}>Текущий</span>
                         ) : isActive ? (
-                          <span className="status-active">Предстоящий</span>
+                          <span className={styles.statusActive}>Предстоящий</span>
                         ) : (
-                          <span className="status-completed">Завершён</span>
+                          <span className={styles.statusCompleted}>Завершён</span>
                         )}
                       </td>
-                      <td className="actions">
+                      <td className={styles.actions}>
                         {editingId === leave.leaveId ? (
                           <>
                             <button onClick={() => handleUpdate(leave.leaveId)}>
@@ -437,7 +438,7 @@ const LeavesManager: React.FC = () => {
                             </button>
                             <button 
                               onClick={() => handleDelete(leave.leaveId)}
-                              className="delete-btn"
+                              className={styles.deleteBtn}
                             >
                               Удалить
                             </button>
@@ -452,280 +453,6 @@ const LeavesManager: React.FC = () => {
           )}
         </div>
       )}
-
-      <style jsx>{`
-        .leaves-manager {
-          padding: 20px;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-        
-        h2, h3, h4, h5 {
-          color: #333;
-          margin-bottom: 15px;
-        }
-        
-        .create-form, .filters-section {
-          margin-bottom: 30px;
-          padding: 20px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          background-color: #f9f9f9;
-        }
-        
-        .form-grid, .filter-grid {
-          display: grid;
-          gap: 15px;
-          margin-bottom: 20px;
-        }
-        
-        .form-grid {
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        }
-        
-        .filter-grid {
-          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        }
-        
-        .form-group, .filter-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        
-        .form-group {
-          flex-direction: row;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 10px;
-        }
-        
-        label {
-          font-weight: 500;
-          color: #555;
-          margin-bottom: 5px;
-        }
-        
-        input {
-          padding: 8px 12px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 14px;
-        }
-        
-        input[type="number"] {
-          width: 120px;
-        }
-        
-        input[type="date"] {
-          width: 150px;
-        }
-        
-        button {
-          padding: 8px 16px;
-          background-color: #007bff;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-          white-space: nowrap;
-        }
-        
-        button:hover {
-          background-color: #0056b3;
-        }
-        
-        .delete-btn {
-          background-color: #dc3545;
-        }
-        
-        .delete-btn:hover {
-          background-color: #c82333;
-        }
-        
-        .view-toggle {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 20px;
-          flex-wrap: wrap;
-        }
-        
-        .view-toggle button {
-          background-color: #6c757d;
-        }
-        
-        .view-toggle button.active {
-          background-color: #007bff;
-        }
-        
-        .employee-leaves {
-          margin-top: 10px;
-          padding: 10px;
-          background-color: #e7f3ff;
-          border-radius: 4px;
-        }
-        
-        .employee-leaves ul {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-        
-        .employee-leaves li {
-          padding: 5px 0;
-          border-bottom: 1px solid #d1e7ff;
-        }
-        
-        .employee-leaves li:last-child {
-          border-bottom: none;
-        }
-        
-        .stats-section {
-          margin-top: 20px;
-        }
-        
-        .stats-cards {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 15px;
-          margin-bottom: 30px;
-        }
-        
-        .stat-card {
-          padding: 20px;
-          background-color: #f8f9fa;
-          border-radius: 8px;
-          text-align: center;
-          border: 1px solid #dee2e6;
-        }
-        
-        .stat-number {
-          font-size: 2rem;
-          font-weight: bold;
-          margin: 10px 0 0 0;
-        }
-        
-        .stat-number.active {
-          color: #28a745;
-        }
-        
-        .stat-number.completed {
-          color: #6c757d;
-        }
-        
-        .type-stats {
-          margin-top: 30px;
-        }
-        
-        .type-stats-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        
-        .type-stats-table th,
-        .type-stats-table td {
-          border: 1px solid #ddd;
-          padding: 10px;
-          text-align: left;
-        }
-        
-        .type-stats-table th {
-          background-color: #f2f2f2;
-          font-weight: bold;
-        }
-        
-        .leaves-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        
-        .leaves-table th,
-        .leaves-table td {
-          border: 1px solid #ddd;
-          padding: 12px;
-          text-align: left;
-        }
-        
-        .leaves-table th {
-          background-color: #f2f2f2;
-          font-weight: bold;
-        }
-        
-        .leaves-table tr:nth-child(even) {
-          background-color: #f9f9f9;
-        }
-        
-        .leaves-table tr:hover {
-          background-color: #f1f1f1;
-        }
-        
-        .leaves-table tr.current-leave {
-          background-color: #fff3cd;
-        }
-        
-        .date-edit {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-        }
-        
-        .status-current, .status-active, .status-completed {
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-          font-weight: bold;
-        }
-        
-        .status-current {
-          background-color: #ffc107;
-          color: #856404;
-        }
-        
-        .status-active {
-          background-color: #d4edda;
-          color: #155724;
-        }
-        
-        .status-completed {
-          background-color: #f8d7da;
-          color: #721c24;
-        }
-        
-        .actions {
-          display: flex;
-          gap: 5px;
-          min-width: 180px;
-        }
-        
-        @media (max-width: 768px) {
-          .form-group {
-            flex-direction: column;
-            align-items: stretch;
-          }
-          
-          input {
-            width: 100%;
-          }
-          
-          button {
-            width: 100%;
-            margin-top: 5px;
-          }
-          
-          .actions {
-            flex-direction: column;
-            min-width: 120px;
-          }
-          
-          .leaves-table {
-            display: block;
-            overflow-x: auto;
-          }
-        }
-      `}</style>
     </div>
   );
 };
