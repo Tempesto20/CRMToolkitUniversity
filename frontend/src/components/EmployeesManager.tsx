@@ -7,6 +7,7 @@ import {
   clearSuccessMessage,
   resetDeleteStatus,
   createEmployee,
+  updateEmployee,
   fetchServiceTypes,
   fetchWorkTypesByService,
   fetchBrigadas,
@@ -30,7 +31,8 @@ import {
   Col,
   DatePicker,
   Tag,
-  Tooltip
+  Tooltip,
+  Upload
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -45,7 +47,9 @@ import {
   HomeOutlined,
   CheckOutlined,
   CloseOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
+  UploadOutlined,
+  EyeOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import styles from './EmployeesManager.module.scss';
@@ -380,9 +384,13 @@ const EmployeesManager: React.FC = () => {
   const [searchInput, setSearchInput] = useState('');
   const [deleteModal, setDeleteModal] = useState(false);
   const [addModal, setAddModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<{ number: number; name: string } | null>(null);
+  const [editingEmployee, setEditingEmployee] = useState<EmployeeType | null>(null);
   const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
   const [filteredWorkTypes, setFilteredWorkTypes] = useState<WorkType[]>([]);
+  const [editFilteredWorkTypes, setEditFilteredWorkTypes] = useState<WorkType[]>([]);
   const [loadingWorkTypes, setLoadingWorkTypes] = useState(false);
   const [localPositions, setLocalPositions] = useState<string[]>([
     'машинист',
@@ -395,6 +403,9 @@ const EmployeesManager: React.FC = () => {
   const [displayedEmployees, setDisplayedEmployees] = useState<EmployeeType[]>([]);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [leavesLoaded, setLeavesLoaded] = useState(false);
+  const [employeePhoto, setEmployeePhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -446,6 +457,20 @@ const EmployeesManager: React.FC = () => {
     }
   }, [employees, initialLoadComplete]);
 
+  // Эффект для установки workTypeId при загрузке editFilteredWorkTypes
+  useEffect(() => {
+    if (editModal && editingEmployee && editFilteredWorkTypes.length > 0) {
+      // Проверяем, есть ли текущий workTypeId в загруженных типах
+      const workTypeExists = editFilteredWorkTypes.some(
+        work => work.workTypeId === editingEmployee.workTypeId
+      );
+      
+      if (workTypeExists) {
+        editForm.setFieldsValue({ workTypeId: editingEmployee.workTypeId });
+      }
+    }
+  }, [editFilteredWorkTypes, editModal, editingEmployee, editForm]);
+
   // Улучшенная функция для поиска сотрудников
   const searchEmployees = useCallback((query: string, employeesList: EmployeeType[]) => {
     if (!query.trim()) {
@@ -484,12 +509,6 @@ const EmployeesManager: React.FC = () => {
       if (!isMatch && employee.personalNumber?.toString().includes(searchQuery)) {
         isMatch = true;
       }
-      
-      // ===== ИЗМЕНЕНИЕ: УБРАНА ПРОВЕРКА ПО ДОЛЖНОСТИ =====
-      // if (!isMatch && employee.position?.toLowerCase().includes(searchQuery)) {
-      //   isMatch = true;
-      // }
-      // ===================================================
       
       if (isMatch) {
         results.push({
@@ -608,6 +627,27 @@ const EmployeesManager: React.FC = () => {
     }
   };
 
+  const handleEditServiceTypeChange = async (value: number, employee: EmployeeType) => {
+    editForm.setFieldsValue({ workTypeId: undefined });
+    setEditFilteredWorkTypes([]);
+    
+    if (value) {
+      setLoadingWorkTypes(true);
+      try {
+        const resultAction = await dispatch(fetchWorkTypesByService(value));
+        if (fetchWorkTypesByService.fulfilled.match(resultAction)) {
+          const workTypes = resultAction.payload;
+          setEditFilteredWorkTypes(workTypes);
+        }
+      } catch (err) {
+        console.error('Ошибка загрузки видов работ:', err);
+        message.error('Ошибка загрузки видов работ');
+      } finally {
+        setLoadingWorkTypes(false);
+      }
+    }
+  };
+
   // Обновление поискового инпута
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(e.target.value);
@@ -630,8 +670,52 @@ const EmployeesManager: React.FC = () => {
   }, [dispatch, employeeToDelete]);
 
   const handleEditClick = useCallback((employee: EmployeeType) => {
-    message.info('Редактирование сотрудника - в разработке');
-  }, []);
+    setEditingEmployee(employee);
+    
+    // Преобразование данных для формы
+    const formValues: any = {
+      fullName: employee.fullName,
+      serviceTypeId: employee.serviceTypeId,
+      workTypeId: employee.workTypeId,
+      position: employee.position,
+      phone: employee.phone,
+      birthday: employee.birthday ? dayjs(employee.birthday * 1000) : null,
+      hasTrip: employee.hasTrip,
+      hasCraneman: employee.hasCraneman,
+      dieselAccess: employee.dieselAccess,
+      electricAccess: employee.electricAccess,
+    };
+    
+    // Обработка бригады - может быть undefined
+    if (employee.brigadaId) {
+      formValues.brigadaId = employee.brigadaId;
+    } else {
+      formValues.brigadaId = undefined; // Явно устанавливаем undefined
+    }
+    
+    // Обработка локомотива - может быть undefined
+    if (employee.locomotiveId) {
+      formValues.locomotiveId = employee.locomotiveId;
+    } else {
+      formValues.locomotiveId = undefined; // Явно устанавливаем undefined
+    }
+    
+    // Загружаем виды работ для выбранной службы
+    handleEditServiceTypeChange(employee.serviceTypeId, employee);
+    
+    // Устанавливаем значения формы
+    editForm.setFieldsValue(formValues);
+    
+    // Устанавливаем превью фото, если есть
+    if (employee.photoFilename && employee.photoMimetype) {
+      setPhotoPreview(`http://localhost:3000/api/employees/photo/${employee.personalNumber}`);
+    } else {
+      setPhotoPreview(null);
+    }
+    
+    setEmployeePhoto(null);
+    setEditModal(true);
+  }, [editForm]);
 
   const handleAddEmployee = () => {
     setAddModal(true);
@@ -641,6 +725,17 @@ const EmployeesManager: React.FC = () => {
     setAddModal(false);
     form.resetFields();
     setFilteredWorkTypes([]);
+    setEmployeePhoto(null);
+    setPhotoPreview(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditModal(false);
+    setEditingEmployee(null);
+    editForm.resetFields();
+    setEditFilteredWorkTypes([]);
+    setEmployeePhoto(null);
+    setPhotoPreview(null);
   };
 
   const handleSubmit = async (values: any) => {
@@ -674,22 +769,136 @@ const EmployeesManager: React.FC = () => {
       formData.append('dieselAccess', values.dieselAccess ? 'true' : 'false');
       formData.append('electricAccess', values.electricAccess ? 'true' : 'false');
       
+      if (employeePhoto) {
+        formData.append('photo', employeePhoto);
+      }
+      
       await dispatch(createEmployee(formData)).unwrap();
       
       setAddModal(false);
       form.resetFields();
       setFilteredWorkTypes([]);
+      setEmployeePhoto(null);
+      setPhotoPreview(null);
       
       dispatch(fetchAllEmployees());
       
       message.success('Сотрудник успешно добавлен!');
     } catch (err: any) {
-      if (err.error === 'Сотрудник с таким личным номером уже существует') {
-        message.error(`Ошибка: ${err.error}. Существующий сотрудник: ${err.existing.fullName}, должность: ${err.existing.position}`);
+      if (err.response?.data?.error === 'Сотрудник с таким личным номером уже существует') {
+        const existing = err.response?.data?.existing;
+        message.error(`Ошибка: ${err.response.data.error}. Существующий сотрудник: ${existing?.fullName}, должность: ${existing?.position}`);
       } else {
         message.error('Ошибка при добавлении сотрудника');
       }
     }
+  };
+
+  const handleEditSubmit = async (values: any) => {
+    if (!editingEmployee) return;
+    
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      
+      // Личный номер нельзя менять, но он нужен для идентификации
+      formData.append('fullName', values.fullName);
+      formData.append('serviceTypeId', values.serviceTypeId.toString());
+      formData.append('workTypeId', values.workTypeId.toString());
+      formData.append('position', values.position);
+      
+      // Обработка бригады
+      if (values.brigadaId && values.brigadaId !== 'undefined') {
+        formData.append('brigadaId', values.brigadaId.toString());
+      } else {
+        formData.append('brigadaId', ''); // Пустая строка для сброса
+      }
+      
+      // Обработка локомотива
+      if (values.locomotiveId && values.locomotiveId !== 'undefined') {
+        formData.append('locomotiveId', values.locomotiveId.toString());
+      } else {
+        formData.append('locomotiveId', ''); // Пустая строка для сброса
+      }
+      
+      // Обработка телефона
+      if (values.phone) {
+        formData.append('phone', values.phone);
+      } else {
+        formData.append('phone', '');
+      }
+      
+      // Обработка даты рождения
+      if (values.birthday) {
+        const birthdayTimestamp = Math.floor(values.birthday.valueOf() / 1000);
+        formData.append('birthday', birthdayTimestamp.toString());
+      } else {
+        formData.append('birthday', '');
+      }
+      
+      // Обработка допусков
+      formData.append('hasTrip', values.hasTrip ? 'true' : 'false');
+      formData.append('hasCraneman', values.hasCraneman ? 'true' : 'false');
+      formData.append('dieselAccess', values.dieselAccess ? 'true' : 'false');
+      formData.append('electricAccess', values.electricAccess ? 'true' : 'false');
+      
+      // Если загружено новое фото
+      if (employeePhoto) {
+        formData.append('photo', employeePhoto);
+      }
+      
+      // Вызываем action для обновления сотрудника
+      await dispatch(updateEmployee({ 
+        personalNumber: editingEmployee.personalNumber, 
+        formData 
+      })).unwrap();
+      
+      // Закрываем модальное окно и сбрасываем состояние
+      setEditModal(false);
+      setEditingEmployee(null);
+      editForm.resetFields();
+      setEditFilteredWorkTypes([]);
+      setEmployeePhoto(null);
+      setPhotoPreview(null);
+      
+      // Обновляем список сотрудников
+      dispatch(fetchAllEmployees());
+      
+      message.success('Сотрудник успешно обновлен!');
+    } catch (err: any) {
+      console.error('Ошибка при обновлении сотрудника:', err);
+      message.error(err.response?.data?.message || 'Ошибка при обновлении сотрудника');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Обработчик загрузки фото
+  const handlePhotoUpload = (file: File) => {
+    // Проверяем тип файла
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('Можно загружать только изображения!');
+      return false;
+    }
+    
+    // Проверяем размер файла (макс. 5MB)
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error('Изображение должно быть меньше 5MB!');
+      return false;
+    }
+    
+    setEmployeePhoto(file);
+    
+    // Создаем превью для отображения
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPhotoPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    return false; // Предотвращаем автоматическую загрузку
   };
 
   // Функция для подсчета сотрудников в отпуске и работающих
@@ -760,7 +969,6 @@ const EmployeesManager: React.FC = () => {
       
       <div className={styles.searchSection}>
         <div className={styles.searchInputContainer}>
-          {/* ===== ИЗМЕНЕНИЕ: УБРАНО "ИЛИ ДОЛЖНОСТИ" ИЗ ПЛЕЙСХОЛДЕРА ===== */}
           <Search
             placeholder="Поиск по ФИО или личному номеру..."
             allowClear
@@ -771,7 +979,6 @@ const EmployeesManager: React.FC = () => {
             prefix={<SearchOutlined />}
             className={styles.searchInput}
           />
-          {/* ============================================================ */}
           {searchInput && (
             <div className={styles.searchInfo}>
               <span className={styles.searchInfoText}>
@@ -879,6 +1086,7 @@ const EmployeesManager: React.FC = () => {
         </>
       )}
 
+      {/* Модальное окно добавления сотрудника */}
       <Modal
         title="Добавить нового сотрудника"
         open={addModal}
@@ -1062,6 +1270,40 @@ const EmployeesManager: React.FC = () => {
             </Col>
           </Row>
           
+          {/* Загрузка фото при создании */}
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item
+                label="Фотография сотрудника:"
+              >
+                <div className={styles.photoUploadSection}>
+                  {photoPreview && (
+                    <div className={styles.photoPreview}>
+                      <img src={photoPreview} alt="Предпросмотр" />
+                      <div className={styles.photoPreviewOverlay}>
+                        <EyeOutlined style={{ fontSize: '24px', color: 'white' }} />
+                      </div>
+                    </div>
+                  )}
+                  <Upload
+                    beforeUpload={handlePhotoUpload}
+                    showUploadList={false}
+                    accept="image/*"
+                  >
+                    <Button icon={<UploadOutlined />}>
+                      {employeePhoto ? 'Фото загружено' : 'Загрузить фото'}
+                    </Button>
+                  </Upload>
+                  {employeePhoto && (
+                    <p className={styles.photoInfo}>
+                      Фото: {employeePhoto.name}
+                    </p>
+                  )}
+                </div>
+              </Form.Item>
+            </Col>
+          </Row>
+          
           <div className={styles.accessSection}>
             <h4>Допуски:</h4>
             <Row gutter={16}>
@@ -1130,6 +1372,299 @@ const EmployeesManager: React.FC = () => {
             </Button>
           </div>
         </Form>
+      </Modal>
+
+      {/* Модальное окно редактирования сотрудника */}
+      <Modal
+        title={`Редактирование сотрудника: ${editingEmployee?.fullName || ''}`}
+        open={editModal}
+        onCancel={handleCancelEdit}
+        footer={null}
+        width={650}
+        className={styles.editEmployeeModal}
+        destroyOnClose={true}
+        key={editingEmployee?.personalNumber || 'edit-modal'}
+        styles={{
+          mask: { backgroundColor: 'rgba(0, 21, 41, 0.8)' }
+        }}
+      >
+        {editingEmployee && (
+          <Form
+            form={editForm}
+            layout="vertical"
+            onFinish={handleEditSubmit}
+            className={styles.editEmployeeForm}
+            key={`form-${editingEmployee.personalNumber}`}
+          >
+            {/* Личный номер - только для отображения, нельзя изменить */}
+            <Row gutter={16}>
+              <Col span={24}>
+                <Form.Item
+                  label="Личный номер:"
+                >
+                  <Input 
+                    value={editingEmployee.personalNumber}
+                    disabled
+                    style={{ fontWeight: 'bold', color: '#1890ff' }}
+                  />
+                  <p className={styles.disabledFieldHint}>
+                    Личный номер сотрудника нельзя изменить
+                  </p>
+                </Form.Item>
+              </Col>
+            </Row>
+            
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Служба:"
+                  name="serviceTypeId"
+                  rules={[{ required: true, message: 'Выберите службу!' }]}
+                >
+                  <Select
+                    placeholder="-- Выберите службу --"
+                    onChange={(value) => handleEditServiceTypeChange(value, editingEmployee)}
+                    loading={status === 'loading'}
+                  >
+                    {serviceTypes.map(service => (
+                      <Option key={service.serviceTypeId} value={service.serviceTypeId}>
+                        {service.serviceTypeName}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              
+              <Col span={12}>
+                <Form.Item
+                  label="Вид работ:"
+                  name="workTypeId"
+                  rules={[{ required: true, message: 'Выберите вид работ!' }]}
+                >
+                  <Select
+                    placeholder={editFilteredWorkTypes.length > 0 ? "-- Выберите вид работ --" : "-- Сначала выберите службу --"}
+                    disabled={editFilteredWorkTypes.length === 0}
+                    loading={loadingWorkTypes}
+                  >
+                    {editFilteredWorkTypes.map(work => (
+                      <Option key={work.workTypeId} value={work.workTypeId}>
+                        {work.workTypeName}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+            
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Должность:"
+                  name="position"
+                  rules={[{ required: true, message: 'Выберите должность!' }]}
+                >
+                  <Select 
+                    placeholder="-- Выберите должность --"
+                    showSearch
+                    allowClear={false}
+                  >
+                    {localPositions.map((position, index) => (
+                      <Option key={index} value={position}>
+                        {position}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              
+              <Col span={12}>
+                <Form.Item
+                  label="Бригада:"
+                  name="brigadaId"
+                >
+                  <Select 
+                    placeholder="-- Выберите бригаду --"
+                    loading={status === 'loading'}
+                    allowClear
+                  >
+                    {brigadas.map(brigada => (
+                      <Option key={brigada.brigadaId} value={brigada.brigadaId}>
+                        {brigada.brigadaName}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+            
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="ФИО:"
+                  name="fullName"
+                  rules={[{ required: true, message: 'Введите ФИО сотрудника!' }]}
+                >
+                  <Input placeholder="Введите полное имя" />
+                </Form.Item>
+              </Col>
+              
+              <Col span={12}>
+                <Form.Item
+                  label="Локомотив:"
+                  name="locomotiveId"
+                  rules={[
+                    { max: 12, message: 'ID локомотива не должен превышать 12 символов' },
+                    { pattern: /^[a-zA-Z0-9\-_]*$/, message: 'Только буквы, цифры, дефисы и подчеркивания' }
+                  ]}
+                >
+                  <Select 
+                    placeholder="-- Выберите локомотив --"
+                    showSearch
+                    optionFilterProp="children"
+                    suffixIcon={<CarOutlined />}
+                    loading={status === 'loading'}
+                    allowClear
+                  >
+                    {sortLocomotives(locomotives).map(locomotive => (
+                      <Option 
+                        key={locomotive.locomotiveId} 
+                        value={locomotive.locomotiveId}
+                      >
+                        {formatLocomotiveDisplay(locomotive)}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+            
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Дата рождения:"
+                  name="birthday"
+                >
+                  <DatePicker 
+                    placeholder="Выберите дату рождения"
+                    format="DD.MM.YYYY"
+                    style={{ width: '100%' }}
+                    suffixIcon={<CalendarOutlined />}
+                  />
+                </Form.Item>
+              </Col>
+              
+              <Col span={12}>
+                <Form.Item
+                  label="Номер телефона:"
+                  name="phone"
+                >
+                  <Input 
+                    placeholder="Введите номер телефона" 
+                    prefix={<PhoneOutlined />}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+            
+            {/* Загрузка фото */}
+            <Row gutter={16}>
+              <Col span={24}>
+                <Form.Item
+                  label="Фотография сотрудника:"
+                >
+                  <div className={styles.photoUploadSection}>
+                    {photoPreview && (
+                      <div className={styles.photoPreview}>
+                        <img src={photoPreview} alt="Предпросмотр" />
+                        <div className={styles.photoPreviewOverlay}>
+                          <EyeOutlined style={{ fontSize: '24px', color: 'white' }} />
+                        </div>
+                      </div>
+                    )}
+                    <Upload
+                      beforeUpload={handlePhotoUpload}
+                      showUploadList={false}
+                      accept="image/*"
+                    >
+                      <Button icon={<UploadOutlined />}>
+                        {employeePhoto ? 'Фото загружено' : 'Загрузить новое фото'}
+                      </Button>
+                    </Upload>
+                    {employeePhoto && (
+                      <p className={styles.photoInfo}>
+                        Новое фото: {employeePhoto.name}
+                      </p>
+                    )}
+                  </div>
+                </Form.Item>
+              </Col>
+            </Row>
+            
+            <div className={styles.accessSection}>
+              <h4>Допуски:</h4>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    label="Допуск к выезду магнитогорск-грузовой"
+                    name="hasTrip"
+                    valuePropName="checked"
+                  >
+                    <Switch checkedChildren="Имеется" unCheckedChildren="Не имеется" />
+                  </Form.Item>
+                </Col>
+                
+                <Col span={12}>
+                  <Form.Item
+                    label="Допуск кантовщика"
+                    name="hasCraneman"
+                    valuePropName="checked"
+                  >
+                    <Switch checkedChildren="Имеется" unCheckedChildren="Не имеется" />
+                  </Form.Item>
+                </Col>
+              </Row>
+              
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    label="Допуск к тепловозу"
+                    name="dieselAccess"
+                    valuePropName="checked"
+                  >
+                    <Switch checkedChildren="Имеется" unCheckedChildren="Не имеется" />
+                  </Form.Item>
+                </Col>
+                
+                <Col span={12}>
+                  <Form.Item
+                    label="Допуск к электровозу"
+                    name="electricAccess"
+                    valuePropName="checked"
+                  >
+                    <Switch checkedChildren="Имеется" unCheckedChildren="Не имеется" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </div>
+            
+            <div className={styles.formFooter}>
+              <Button 
+                onClick={handleCancelEdit}
+                className={styles.cancelButton}
+              >
+                Отмена
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit"
+                className={styles.submitButton}
+                loading={uploading}
+              >
+                Сохранить изменения
+              </Button>
+            </div>
+          </Form>
+        )}
       </Modal>
 
       <Modal

@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Body,
   Param,
   UseInterceptors,
@@ -12,6 +14,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto, CreateEmployeeWithPhotoDto } from './dto/create-employees.dto';
+import { UpdateEmployeeDto, UpdateEmployeeWithPhotoDto } from './dto/update-employees.dto';
 
 @Controller('api/employees')
 export class EmployeesController {
@@ -35,6 +38,24 @@ export class EmployeesController {
     return this.employeesService.create(employeeData);
   }
 
+  @Put(':personalNumber')
+  @UseInterceptors(FileInterceptor('photo'))
+  async update(
+    @Param('personalNumber', ParseIntPipe) personalNumber: number,
+    @Body() updateEmployeeDto: UpdateEmployeeDto,
+    @UploadedFile() photo?: any,
+  ) {
+    const employeeData: UpdateEmployeeWithPhotoDto = {
+      ...updateEmployeeDto,
+      photo,
+      serviceTypeId: updateEmployeeDto.serviceTypeId ? Number(updateEmployeeDto.serviceTypeId) : undefined,
+      workTypeId: updateEmployeeDto.workTypeId ? Number(updateEmployeeDto.workTypeId) : undefined,
+      brigadaId: updateEmployeeDto.brigadaId ? Number(updateEmployeeDto.brigadaId) : undefined,
+    };
+
+    return this.employeesService.update(personalNumber, employeeData);
+  }
+
   @Get('work-types/:serviceTypeId')
   async getWorkTypesByService(@Param('serviceTypeId', ParseIntPipe) serviceTypeId: number) {
     return this.employeesService.getWorkTypesByService(serviceTypeId);
@@ -48,5 +69,10 @@ export class EmployeesController {
   @Get(':personalNumber')
   async findOne(@Param('personalNumber', ParseIntPipe) personalNumber: number) {
     return this.employeesService.findOne(personalNumber);
+  }
+
+  @Delete(':personalNumber')
+  async remove(@Param('personalNumber', ParseIntPipe) personalNumber: number) {
+    return this.employeesService.remove(personalNumber);
   }
 }

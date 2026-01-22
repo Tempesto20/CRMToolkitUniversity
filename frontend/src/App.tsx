@@ -12,7 +12,7 @@ import WorkTypesManager from './components/WorkTypesManager';
 import ServiceTypesManager from './components/ServiceTypesManager';
 import LocationWorkManager from './components/LocationWorkManager';
 import LeaveTypesManager from './components/LeaveTypesManager';
-import BrigadaComponent from './components/BrigadaComponent';
+// import BrigadaComponent from './components/BrigadaComponent';
 
 function App() {
   return (
@@ -29,7 +29,7 @@ function App() {
             <Route path="/service-types" element={<ServiceTypesManager />} />
             <Route path="/location-works" element={<LocationWorkManager />} />
             <Route path="/leave-types" element={<LeaveTypesManager />} />
-            <Route path="/brigadas" element={<BrigadaComponent />} />
+            {/* <Route path="/brigadas" element={<BrigadaComponent />} /> */}
           </Routes>
         </Layout>
       </Router>

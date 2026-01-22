@@ -15,6 +15,20 @@ export const createEmployee = createAsyncThunk(
   }
 );
 
+export const updateEmployee = createAsyncThunk(
+  'employees/updateEmployeeStatus',
+  async ({ personalNumber, formData }: { personalNumber: number; formData: FormData }) => {
+    const { data } = await axios.put(
+      `${API_BASE_URL}/api/employees/${personalNumber}`, 
+      formData, 
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }
+    );
+    return data;
+  }
+);
+
 export const fetchServiceTypes = createAsyncThunk(
   'employees/fetchServiceTypesStatus',
   async () => {
@@ -26,7 +40,7 @@ export const fetchServiceTypes = createAsyncThunk(
 export const fetchWorkTypesByService = createAsyncThunk(
   'employees/fetchWorkTypesByServiceStatus',
   async (serviceTypeId: number) => {
-    const { data } = await axios.get(`${API_BASE_URL}/work-types/by-service/${serviceTypeId}`);
+    const { data } = await axios.get(`${API_BASE_URL}/api/employees/work-types/${serviceTypeId}`);
     return data as any[];
   }
 );
@@ -184,9 +198,31 @@ const employeesSlice = createSlice({
           state.positions.sort();
         }
       })
-      .addCase(createEmployee.rejected, (state, action) => {
+      .addCase(createEmployee.rejected, (state, action: any) => {
         state.status = 'error';
-        state.error = action.error.message || 'Ошибка при добавлении сотрудника';
+        state.error = action.error?.message || 'Ошибка при добавлении сотрудника';
+      })
+      
+      // Обновление сотрудника
+      .addCase(updateEmployee.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+        state.successMessage = null;
+      })
+      .addCase(updateEmployee.fulfilled, (state, action) => {
+        state.status = 'success';
+        const updatedEmployee = action.payload as Employee;
+        const index = state.employees.findIndex(
+          emp => emp.personalNumber === updatedEmployee.personalNumber
+        );
+        if (index !== -1) {
+          state.employees[index] = updatedEmployee;
+        }
+        state.successMessage = 'Сотрудник успешно обновлен!';
+      })
+      .addCase(updateEmployee.rejected, (state, action) => {
+        state.status = 'error';
+        state.error = action.error.message || 'Ошибка при обновлении сотрудника';
       })
       
       // Загрузка служб

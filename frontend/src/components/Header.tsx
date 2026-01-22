@@ -9,6 +9,7 @@ const Header: React.FC = () => {
 
   const navigationLinks = [
     { path: '/', label: 'Главная', icon: '🏠' },
+    // { path: '/add-employee', label: 'Добавить сотрудника', icon: '➕' },
     { path: '/employees', label: 'Сотрудники', icon: '👥' },
     { path: '/locomotives', label: 'Локомотивы', icon: '🚂' },
     { path: '/leaves', label: 'Отпуска', icon: '📅' },
@@ -16,7 +17,7 @@ const Header: React.FC = () => {
     { path: '/service-types', label: 'Службы', icon: '🏭' },
     { path: '/location-works', label: 'Места работы', icon: '📍' },
     { path: '/leave-types', label: 'Типы отпусков', icon: '✈️' },
-    { path: '/brigadas', label: 'Бригады', icon: '👷' },
+    // { path: '/brigadas', label: 'Бригады', icon: '👷' },
   ];
 
   return (
