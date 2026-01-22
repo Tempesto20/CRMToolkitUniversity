@@ -2,22 +2,47 @@
 import axios from 'axios';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
+const API_BASE_URL = 'http://localhost:3000';
+
+// Асинхронные thunks
 export const createEmployee = createAsyncThunk(
   'employees/createEmployeeStatus',
   async (formData: FormData) => {
-    const { data } = await axios.post('http://localhost:3000/api/employees', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    const { data } = await axios.post(`${API_BASE_URL}/api/employees`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return data;
   }
 );
 
-export const fetchWorkTypes = createAsyncThunk(
-  'employees/fetchWorkTypesStatus',
+export const fetchServiceTypes = createAsyncThunk(
+  'employees/fetchServiceTypesStatus',
+  async () => {
+    const { data } = await axios.get(`${API_BASE_URL}/service-types`);
+    return data as any[];
+  }
+);
+
+export const fetchWorkTypesByService = createAsyncThunk(
+  'employees/fetchWorkTypesByServiceStatus',
   async (serviceTypeId: number) => {
-    const { data } = await axios.get(`http://localhost:3000/api/employees/work-types/${serviceTypeId}`);
+    const { data } = await axios.get(`${API_BASE_URL}/work-types/by-service/${serviceTypeId}`);
+    return data as any[];
+  }
+);
+
+export const fetchBrigadas = createAsyncThunk(
+  'employees/fetchBrigadasStatus',
+  async () => {
+    const { data } = await axios.get(`${API_BASE_URL}/brigada`);
+    return data as any[];
+  }
+);
+
+export const fetchLocomotives = createAsyncThunk(
+  'employees/fetchLocomotivesStatus',
+  async () => {
+    const { data } = await axios.get(`${API_BASE_URL}/locomotives`);
     return data as any[];
   }
 );
@@ -25,7 +50,7 @@ export const fetchWorkTypes = createAsyncThunk(
 export const fetchAllEmployees = createAsyncThunk(
   'employees/fetchAllEmployeesStatus',
   async () => {
-    const { data } = await axios.get('http://localhost:3000/api/employees');
+    const { data } = await axios.get(`${API_BASE_URL}/api/employees`);
     return data as any[];
   }
 );
@@ -33,35 +58,50 @@ export const fetchAllEmployees = createAsyncThunk(
 export const deleteEmployee = createAsyncThunk(
   'employees/deleteEmployeeStatus',
   async (personalNumber: number) => {
-    await axios.delete(`http://localhost:3000/api/employees/${personalNumber}`);
+    await axios.delete(`${API_BASE_URL}/api/employees/${personalNumber}`);
     return personalNumber;
   }
 );
 
-export type Employee = {
+// Интерфейсы
+export interface ServiceType {
+  serviceTypeId: number;
+  serviceTypeName: string;
+}
+
+export interface WorkType {
+  workTypeId: number;
+  workTypeName: string;
+}
+
+export interface Brigada {
+  brigadaId: number;
+  brigadaName: string;
+}
+
+export interface Locomotive {
+  locomotiveId: string;
+  locomotiveName: string;
+  locomotiveType?: string;
+  locomotiveDepo?: boolean;
+  operationalStatus?: boolean;
+  locationId?: number;
+  serviceTypeId?: number;
+  workTypeId?: number;
+}
+
+export interface Employee {
   personalNumber: number;
   fullName: string;
   position: string;
   serviceTypeId: number;
   workTypeId: number;
-  serviceType?: {
-    serviceTypeId: number;
-    serviceTypeName: string;
-  };
-  workType?: {
-    workTypeId: number;
-    workTypeName: string;
-  };
+  serviceType?: ServiceType;
+  workType?: WorkType;
   brigadaId?: number;
-  brigada?: {
-    brigadaId: number;
-    brigadaName: string;
-  };
+  brigada?: Brigada;
   locomotiveId?: string;
-  locomotive?: {
-    locomotiveId: string;
-    locomotiveName: string;
-  };
+  locomotive?: Locomotive;
   birthday?: number;
   phone?: string;
   hasTrip: boolean;
@@ -71,16 +111,15 @@ export type Employee = {
   photoPath?: string;
   photoFilename?: string;
   photoMimetype?: string;
-};
-
-export type WorkType = {
-  work_type_id: number;
-  work_type_name: string;
-};
+}
 
 interface EmployeesState {
   employees: Employee[];
+  serviceTypes: ServiceType[];
   workTypes: WorkType[];
+  brigadas: Brigada[];
+  locomotives: Locomotive[];
+  positions: string[];
   status: 'idle' | 'loading' | 'success' | 'error';
   error: string | null;
   successMessage: string | null;
@@ -89,7 +128,11 @@ interface EmployeesState {
 
 const initialState: EmployeesState = {
   employees: [],
+  serviceTypes: [],
   workTypes: [],
+  brigadas: [],
+  locomotives: [],
+  positions: [],
   status: 'idle',
   error: null,
   successMessage: null,
@@ -112,9 +155,19 @@ const employeesSlice = createSlice({
     resetDeleteStatus: (state) => {
       state.deleteStatus = 'idle';
     },
+    extractPositionsFromEmployees: (state) => {
+      const positionsSet = new Set<string>();
+      state.employees.forEach(employee => {
+        if (employee.position && employee.position.trim() !== '') {
+          positionsSet.add(employee.position);
+        }
+      });
+      state.positions = Array.from(positionsSet).sort();
+    },
   },
   extraReducers: (builder) => {
     builder
+      // Создание сотрудника
       .addCase(createEmployee.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -124,22 +177,71 @@ const employeesSlice = createSlice({
         state.status = 'success';
         state.employees.push(action.payload as any);
         state.successMessage = 'Сотрудник успешно добавлен!';
+        
+        const newEmployee = action.payload as Employee;
+        if (newEmployee.position && !state.positions.includes(newEmployee.position)) {
+          state.positions.push(newEmployee.position);
+          state.positions.sort();
+        }
       })
       .addCase(createEmployee.rejected, (state, action) => {
         state.status = 'error';
         state.error = action.error.message || 'Ошибка при добавлении сотрудника';
       })
-      .addCase(fetchWorkTypes.pending, (state) => {
+      
+      // Загрузка служб
+      .addCase(fetchServiceTypes.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(fetchWorkTypes.fulfilled, (state, action) => {
+      .addCase(fetchServiceTypes.fulfilled, (state, action) => {
+        state.serviceTypes = action.payload;
+        state.status = 'success';
+      })
+      .addCase(fetchServiceTypes.rejected, (state) => {
+        state.status = 'error';
+        state.serviceTypes = [];
+      })
+      
+      // Загрузка видов работ по службе
+      .addCase(fetchWorkTypesByService.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchWorkTypesByService.fulfilled, (state, action) => {
         state.workTypes = action.payload;
         state.status = 'success';
       })
-      .addCase(fetchWorkTypes.rejected, (state) => {
+      .addCase(fetchWorkTypesByService.rejected, (state) => {
         state.status = 'error';
         state.workTypes = [];
       })
+      
+      // Загрузка бригад
+      .addCase(fetchBrigadas.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchBrigadas.fulfilled, (state, action) => {
+        state.brigadas = action.payload;
+        state.status = 'success';
+      })
+      .addCase(fetchBrigadas.rejected, (state) => {
+        state.status = 'error';
+        state.brigadas = [];
+      })
+      
+      // Загрузка локомотивов
+      .addCase(fetchLocomotives.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchLocomotives.fulfilled, (state, action) => {
+        state.locomotives = action.payload;
+        state.status = 'success';
+      })
+      .addCase(fetchLocomotives.rejected, (state) => {
+        state.status = 'error';
+        state.locomotives = [];
+      })
+      
+      // Загрузка всех сотрудников
       .addCase(fetchAllEmployees.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -147,12 +249,22 @@ const employeesSlice = createSlice({
       .addCase(fetchAllEmployees.fulfilled, (state, action) => {
         state.employees = action.payload;
         state.status = 'success';
+        
+        const positionsSet = new Set<string>();
+        action.payload.forEach((employee: Employee) => {
+          if (employee.position && employee.position.trim() !== '') {
+            positionsSet.add(employee.position);
+          }
+        });
+        state.positions = Array.from(positionsSet).sort();
       })
       .addCase(fetchAllEmployees.rejected, (state, action) => {
         state.status = 'error';
         state.error = action.error.message || 'Ошибка загрузки сотрудников';
         state.employees = [];
       })
+      
+      // Удаление сотрудника
       .addCase(deleteEmployee.pending, (state) => {
         state.deleteStatus = 'loading';
         state.error = null;
@@ -171,5 +283,11 @@ const employeesSlice = createSlice({
   },
 });
 
-export const { clearError, clearSuccessMessage, resetStatus, resetDeleteStatus } = employeesSlice.actions;
+export const { 
+  clearError, 
+  clearSuccessMessage, 
+  resetStatus, 
+  resetDeleteStatus,
+  extractPositionsFromEmployees 
+} = employeesSlice.actions;
 export default employeesSlice.reducer;

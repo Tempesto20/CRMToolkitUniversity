@@ -1,4 +1,3 @@
-// frontend/src/components/EmployeesManager.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
@@ -8,7 +7,15 @@ import {
   clearSuccessMessage,
   resetDeleteStatus,
   createEmployee,
-  Employee as EmployeeType
+  fetchServiceTypes,
+  fetchWorkTypesByService,
+  fetchBrigadas,
+  fetchLocomotives,
+  Employee as EmployeeType,
+  ServiceType,
+  WorkType,
+  Brigada,
+  Locomotive
 } from '../redux/slices/employeesSlice';
 import { 
   Modal, 
@@ -30,7 +37,7 @@ import {
   DeleteOutlined,
   PhoneOutlined,
   CalendarOutlined,
-  CarOutlined // Используем CarOutlined вместо TrainOutlined
+  CarOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import styles from './EmployeesManager.module.scss';
@@ -54,10 +61,8 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee, onEdit, onDelete 
 
   const photoUrl = getPhotoUrl();
 
-  // Форматирование даты рождения для отображения
   const formatBirthday = (birthday?: number) => {
     if (!birthday) return 'Не указана';
-    // Преобразуем Unix timestamp в дату
     const date = new Date(birthday * 1000);
     return date.toLocaleDateString('ru-RU');
   };
@@ -110,7 +115,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee, onEdit, onDelete 
             <p>
               <strong>Локомотив:</strong> 
               <span className={styles.employeeValue}>
-                {employee.locomotive?.locomotiveName || `№${employee.locomotiveId}`}
+                {employee.locomotive?.locomotiveName || employee.locomotiveId}
               </span>
             </p>
           )}
@@ -157,30 +162,14 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee, onEdit, onDelete 
   );
 };
 
-interface ServiceType {
-  serviceTypeId: number;
-  serviceTypeName: string;
-}
-
-interface WorkType {
-  workTypeId: number;
-  workTypeName: string;
-}
-
-interface Brigada {
-  brigadaId: number;
-  brigadaName: string;
-}
-
-interface Locomotive {
-  locomotiveId: string;
-  locomotiveName: string;
-}
-
 const EmployeesManager: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { 
     employees, 
+    serviceTypes,
+    brigadas,
+    locomotives,
+    positions,
     status, 
     deleteStatus,
     error,
@@ -191,40 +180,20 @@ const EmployeesManager: React.FC = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [addModal, setAddModal] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<{ number: number; name: string } | null>(null);
-  const [editingEmployee, setEditingEmployee] = useState<EmployeeType | null>(null);
   const [form] = Form.useForm();
-  
-  // Состояния для данных из БД
-  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([
-    { serviceTypeId: 1, serviceTypeName: 'Электровозная служба' },
-    { serviceTypeId: 2, serviceTypeName: 'Тепловозная служба' }
-  ]);
-  const [workTypes, setWorkTypes] = useState<WorkType[]>([]);
-  const [brigadas, setBrigadas] = useState<Brigada[]>([
-    { brigadaId: 1, brigadaName: 'Бригада 1' },
-    { brigadaId: 2, brigadaName: 'Бригада 2' },
-    { brigadaId: 3, brigadaName: 'Бригада 3' },
-    { brigadaId: 4, brigadaName: 'Бригада 4' }
-  ]);
-  const [locomotives, setLocomotives] = useState<Locomotive[]>([
-    { locomotiveId: 'ЭП-001', locomotiveName: 'Электровоз ЭП-001' },
-    { locomotiveId: 'ЭП-002', locomotiveName: 'Электровоз ЭП-002' },
-    { locomotiveId: 'ТЭМ-101', locomotiveName: 'Тепловоз ТЭМ-101' },
-    { locomotiveId: 'ТЭМ-102', locomotiveName: 'Тепловоз ТЭМ-102' },
-    { locomotiveId: 'ВЛ-80', locomotiveName: 'ВЛ-80' },
-    { locomotiveId: '2М62', locomotiveName: '2М62' },
-    { locomotiveId: 'ЧМЭ3', locomotiveName: 'ЧМЭ3' },
-    { locomotiveId: 'ТЭМ2', locomotiveName: 'ТЭМ2' },
-  ]);
-  const [positions, setPositions] = useState<string[]>([
-    'Машинист',
-    'Помощник машиниста',
-    'Руководитель',
-    'Инструктор'
+  const [filteredWorkTypes, setFilteredWorkTypes] = useState<WorkType[]>([]);
+  const [loadingWorkTypes, setLoadingWorkTypes] = useState(false);
+  const [localPositions, setLocalPositions] = useState<string[]>([
+    'машинист',
+    'пом.маш',
+    'дублер'
   ]);
 
   useEffect(() => {
     dispatch(fetchAllEmployees());
+    dispatch(fetchServiceTypes());
+    dispatch(fetchBrigadas());
+    dispatch(fetchLocomotives());
   }, [dispatch]);
 
   useEffect(() => {
@@ -246,26 +215,55 @@ const EmployeesManager: React.FC = () => {
     }
   }, [deleteStatus, dispatch]);
 
-  // Обработчик изменения службы
-  const handleServiceTypeChange = (value: number) => {
-    form.setFieldsValue({ workTypeId: undefined });
-    
-    // Загружаем виды работ для выбранной службы
-    let workTypesData: WorkType[] = [];
-    if (value === 1) {
-      // Электровозная служба
-      workTypesData = [
-        { workTypeId: 1, workTypeName: 'поездная колонна' },
-        { workTypeId: 2, workTypeName: 'маневровая колонна' }
-      ];
-    } else if (value === 2) {
-      // Тепловозная служба
-      workTypesData = [
-        { workTypeId: 3, workTypeName: '5 проходная / разливка - маневровая колонна' },
-        { workTypeId: 4, workTypeName: '7 проходная / депо - маневровая колонна' }
-      ];
+  // Функция для сортировки locomotiveId как чисел
+  const sortLocomotives = (locos: Locomotive[]) => {
+    return [...locos].sort((a, b) => {
+      const extractNumber = (id: string) => {
+        const match = id.match(/\d+/);
+        return match ? parseInt(match[0], 10) : NaN;
+      };
+      
+      const numA = extractNumber(a.locomotiveId);
+      const numB = extractNumber(b.locomotiveId);
+      
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numA - numB;
+      }
+      if (!isNaN(numA) && isNaN(numB)) return -1;
+      if (isNaN(numA) && !isNaN(numB)) return 1;
+      
+      return a.locomotiveId.localeCompare(b.locomotiveId);
+    });
+  };
+
+  // Функция для форматирования отображения локомотива
+  const formatLocomotiveDisplay = (locomotive: Locomotive) => {
+    if (!locomotive) return '';
+    if (locomotive.locomotiveName && 
+        locomotive.locomotiveName !== 'не указано' && 
+        locomotive.locomotiveName !== locomotive.locomotiveId) {
+      return `${locomotive.locomotiveName} (${locomotive.locomotiveId})`;
     }
-    setWorkTypes(workTypesData);
+    return locomotive.locomotiveId;
+  };
+
+  const handleServiceTypeChange = async (value: number) => {
+    form.setFieldsValue({ workTypeId: undefined });
+    setFilteredWorkTypes([]);
+    
+    if (value) {
+      setLoadingWorkTypes(true);
+      try {
+        const resultAction = await dispatch(fetchWorkTypesByService(value));
+        if (fetchWorkTypesByService.fulfilled.match(resultAction)) {
+          setFilteredWorkTypes(resultAction.payload);
+        }
+      } catch (err) {
+        message.error('Ошибка загрузки видов работ');
+      } finally {
+        setLoadingWorkTypes(false);
+      }
+    }
   };
 
   const filteredEmployees = employees.filter(employee => {
@@ -288,7 +286,6 @@ const EmployeesManager: React.FC = () => {
   }, [dispatch, employeeToDelete]);
 
   const handleEditClick = useCallback((employee: EmployeeType) => {
-    setEditingEmployee(employee);
     message.info('Редактирование сотрудника - в разработке');
   }, []);
 
@@ -299,50 +296,47 @@ const EmployeesManager: React.FC = () => {
   const handleCancelAdd = () => {
     setAddModal(false);
     form.resetFields();
+    setFilteredWorkTypes([]);
   };
 
   const handleSubmit = async (values: any) => {
     try {
-      // Преобразуем значения формы в нужный формат
       const formData = new FormData();
       
-      // Добавляем обязательные поля
       formData.append('fullName', values.fullName);
       formData.append('personalNumber', values.personalNumber.toString());
       formData.append('serviceTypeId', values.serviceTypeId.toString());
       formData.append('workTypeId', values.workTypeId.toString());
       formData.append('position', values.position);
       
-      // Добавляем опциональные поля
-      if (values.brigadaId) {
+      if (values.brigadaId && values.brigadaId !== 'undefined') {
         formData.append('brigadaId', values.brigadaId.toString());
       }
-      if (values.locomotiveId) {
-        formData.append('locomotiveId', values.locomotiveId);
+      
+      // Исправлено: locomotiveId передается как строка
+      if (values.locomotiveId && values.locomotiveId !== 'undefined') {
+        formData.append('locomotiveId', values.locomotiveId.toString());
       }
+      
       if (values.phone) {
         formData.append('phone', values.phone);
       }
       if (values.birthday) {
-        // Преобразуем дату в Unix timestamp (секунды)
         const birthdayTimestamp = Math.floor(values.birthday.valueOf() / 1000);
         formData.append('birthday', birthdayTimestamp.toString());
       }
       
-      // Добавляем допуски (по умолчанию false)
       formData.append('hasTrip', values.hasTrip ? 'true' : 'false');
       formData.append('hasCraneman', values.hasCraneman ? 'true' : 'false');
       formData.append('dieselAccess', values.dieselAccess ? 'true' : 'false');
       formData.append('electricAccess', values.electricAccess ? 'true' : 'false');
       
-      // Отправляем запрос на создание сотрудника
       await dispatch(createEmployee(formData)).unwrap();
       
-      // Закрываем модальное окно и обновляем данные
       setAddModal(false);
       form.resetFields();
+      setFilteredWorkTypes([]);
       
-      // Обновляем список сотрудников
       dispatch(fetchAllEmployees());
       
       message.success('Сотрудник успешно добавлен!');
@@ -428,7 +422,6 @@ const EmployeesManager: React.FC = () => {
         </div>
       )}
 
-      {/* Модальное окно добавления сотрудника */}
       <Modal
         title="Добавить нового сотрудника"
         open={addModal}
@@ -436,7 +429,9 @@ const EmployeesManager: React.FC = () => {
         footer={null}
         width={650}
         className={styles.addEmployeeModal}
-        maskStyle={{ backgroundColor: 'rgba(0, 21, 41, 0.8)' }} // Темно-синий фон
+        styles={{
+          mask: { backgroundColor: 'rgba(0, 21, 41, 0.8)' }
+        }}
       >
         <Form
           form={form}
@@ -444,7 +439,6 @@ const EmployeesManager: React.FC = () => {
           onFinish={handleSubmit}
           className={styles.addEmployeeForm}
         >
-          {/* Обязательные поля */}
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
@@ -455,6 +449,7 @@ const EmployeesManager: React.FC = () => {
                 <Select
                   placeholder="-- Выберите службу --"
                   onChange={handleServiceTypeChange}
+                  loading={status === 'loading'}
                 >
                   {serviceTypes.map(service => (
                     <Option key={service.serviceTypeId} value={service.serviceTypeId}>
@@ -472,10 +467,11 @@ const EmployeesManager: React.FC = () => {
                 rules={[{ required: true, message: 'Выберите вид работ!' }]}
               >
                 <Select
-                  placeholder={workTypes.length > 0 ? "-- Выберите вид работ --" : "-- Сначала выберите службу --"}
-                  disabled={workTypes.length === 0}
+                  placeholder={filteredWorkTypes.length > 0 ? "-- Выберите вид работ --" : "-- Сначала выберите службу --"}
+                  disabled={filteredWorkTypes.length === 0}
+                  loading={loadingWorkTypes}
                 >
-                  {workTypes.map(work => (
+                  {filteredWorkTypes.map(work => (
                     <Option key={work.workTypeId} value={work.workTypeId}>
                       {work.workTypeName}
                     </Option>
@@ -492,8 +488,11 @@ const EmployeesManager: React.FC = () => {
                 name="position"
                 rules={[{ required: true, message: 'Выберите должность!' }]}
               >
-                <Select placeholder="-- Выберите должность --">
-                  {positions.map((position, index) => (
+                <Select 
+                  placeholder="-- Выберите должность --"
+                  showSearch
+                >
+                  {localPositions.map((position, index) => (
                     <Option key={index} value={position}>
                       {position}
                     </Option>
@@ -507,8 +506,11 @@ const EmployeesManager: React.FC = () => {
                 label="Бригада:"
                 name="brigadaId"
               >
-                <Select placeholder="-- Выберите бригаду --">
-                  <Option value={undefined}>Не выбрано</Option>
+                <Select 
+                  placeholder="-- Выберите бригаду --"
+                  loading={status === 'loading'}
+                  allowClear
+                >
                   {brigadas.map(brigada => (
                     <Option key={brigada.brigadaId} value={brigada.brigadaId}>
                       {brigada.brigadaName}
@@ -544,23 +546,30 @@ const EmployeesManager: React.FC = () => {
             </Col>
           </Row>
           
-          {/* Новые необязательные поля */}
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 label="Локомотив:"
                 name="locomotiveId"
+                rules={[
+                  { max: 12, message: 'ID локомотива не должен превышать 12 символов' },
+                  { pattern: /^[a-zA-Z0-9\-_]*$/, message: 'Только буквы, цифры, дефисы и подчеркивания' }
+                ]}
               >
                 <Select 
                   placeholder="-- Выберите локомотив --"
                   showSearch
                   optionFilterProp="children"
-                  suffixIcon={<CarOutlined />} 
+                  suffixIcon={<CarOutlined />}
+                  loading={status === 'loading'}
+                  allowClear
                 >
-                  <Option value={undefined}>Не выбрано</Option>
-                  {locomotives.map(locomotive => (
-                    <Option key={locomotive.locomotiveId} value={locomotive.locomotiveId}>
-                      {locomotive.locomotiveName}
+                  {sortLocomotives(locomotives).map(locomotive => (
+                    <Option 
+                      key={locomotive.locomotiveId} 
+                      value={locomotive.locomotiveId}
+                    >
+                      {formatLocomotiveDisplay(locomotive)}
                     </Option>
                   ))}
                 </Select>
@@ -582,7 +591,6 @@ const EmployeesManager: React.FC = () => {
             </Col>
           </Row>
           
-          {/* Опциональные поля */}
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item
@@ -597,7 +605,6 @@ const EmployeesManager: React.FC = () => {
             </Col>
           </Row>
           
-          {/* Допуски */}
           <div className={styles.accessSection}>
             <h4>Допуски:</h4>
             <Row gutter={16}>
@@ -606,6 +613,7 @@ const EmployeesManager: React.FC = () => {
                   label="Допуск к выезду магнитогорск-грузовой"
                   name="hasTrip"
                   valuePropName="checked"
+                  initialValue={false}
                 >
                   <Switch checkedChildren="Имеется" unCheckedChildren="Не имеется" />
                 </Form.Item>
@@ -616,6 +624,7 @@ const EmployeesManager: React.FC = () => {
                   label="Допуск кантовщика"
                   name="hasCraneman"
                   valuePropName="checked"
+                  initialValue={false}
                 >
                   <Switch checkedChildren="Имеется" unCheckedChildren="Не имеется" />
                 </Form.Item>
@@ -628,6 +637,7 @@ const EmployeesManager: React.FC = () => {
                   label="Допуск к тепловозу"
                   name="dieselAccess"
                   valuePropName="checked"
+                  initialValue={false}
                 >
                   <Switch checkedChildren="Имеется" unCheckedChildren="Не имеется" />
                 </Form.Item>
@@ -638,6 +648,7 @@ const EmployeesManager: React.FC = () => {
                   label="Допуск к электровозу"
                   name="electricAccess"
                   valuePropName="checked"
+                  initialValue={false}
                 >
                   <Switch checkedChildren="Имеется" unCheckedChildren="Не имеется" />
                 </Form.Item>
@@ -645,7 +656,6 @@ const EmployeesManager: React.FC = () => {
             </Row>
           </div>
           
-          {/* Кнопки внизу формы */}
           <div className={styles.formFooter}>
             <Button 
               onClick={handleCancelAdd}
@@ -665,7 +675,6 @@ const EmployeesManager: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* Модальное окно удаления сотрудника */}
       <Modal
         title="Подтверждение удаления"
         open={deleteModal}

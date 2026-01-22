@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { store } from './redux/store';
 import Layout from './components/Layout';
 import HomePage from './components/HomePage';
-import AddEmployeeForm from './components/AddEmployeeForm';
+// import AddEmployeeForm from './components/AddEmployeeForm';
 import EmployeesManager from './components/EmployeesManager';
 import LocomotivesManager from './components/LocomotivesManager';
 import LeavesManager from './components/LeavesManager';
@@ -21,7 +21,7 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/add-employee" element={<AddEmployeeForm />} />
+            {/* <Route path="/add-employee" element={<AddEmployeeForm />} /> */}
             <Route path="/employees" element={<EmployeesManager />} />
             <Route path="/locomotives" element={<LocomotivesManager />} />
             <Route path="/leaves" element={<LeavesManager />} />
