@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
 import { 
@@ -28,7 +28,9 @@ import {
   Form, 
   Row, 
   Col,
-  DatePicker
+  DatePicker,
+  Tag,
+  Tooltip
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -37,7 +39,13 @@ import {
   DeleteOutlined,
   PhoneOutlined,
   CalendarOutlined,
-  CarOutlined
+  CarOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  HomeOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  InfoCircleOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import styles from './EmployeesManager.module.scss';
@@ -45,13 +53,39 @@ import styles from './EmployeesManager.module.scss';
 const { Search } = Input;
 const { Option } = Select;
 
-interface EmployeeCardProps {
-  employee: EmployeeType;
-  onEdit: (employee: EmployeeType) => void;
-  onDelete: (personalNumber: number, fullName: string) => void;
+// Интерфейс для отпусков
+interface Leave {
+  leave_id: number;
+  employee_personal_number: number;
+  leave_type_id: number;
+  start_date: string;
+  end_date: string;
+  leave_type_name?: string;
 }
 
-const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee, onEdit, onDelete }) => {
+interface LeaveType {
+  leave_type_id: number;
+  leave_type_name: string;
+  description: string;
+}
+
+interface EmployeeCardProps {
+  employee: EmployeeType;
+  leaves: Leave[];
+  leaveTypes: LeaveType[];
+  onEdit: (employee: EmployeeType) => void;
+  onDelete: (personalNumber: number, fullName: string) => void;
+  isExactMatch?: boolean;
+}
+
+const EmployeeCard: React.FC<EmployeeCardProps> = ({ 
+  employee, 
+  leaves, 
+  leaveTypes, 
+  onEdit, 
+  onDelete,
+  isExactMatch
+}) => {
   const getPhotoUrl = () => {
     if (employee.photoFilename && employee.photoMimetype) {
       return `http://localhost:3000/api/employees/photo/${employee.personalNumber}`;
@@ -67,8 +101,77 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee, onEdit, onDelete 
     return date.toLocaleDateString('ru-RU');
   };
 
+  // Функция для проверки, находится ли сотрудник в отпуске
+  const isOnLeave = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const employeeLeaves = leaves.filter(leave => 
+      leave.employee_personal_number === employee.personalNumber
+    );
+    
+    for (const leave of employeeLeaves) {
+      const startDate = new Date(leave.start_date);
+      const endDate = new Date(leave.end_date);
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      
+      if (today >= startDate && today <= endDate) {
+        return {
+          isOnLeave: true,
+          leaveType: leave.leave_type_name || 'Отпуск',
+          endDate: leave.end_date
+        };
+      }
+    }
+    
+    return { 
+      isOnLeave: false,
+      leaveType: undefined,
+      endDate: undefined
+    };
+  };
+
+  const leaveInfo = isOnLeave();
+
+  // Получить текущий тип отпуска
+  const getCurrentLeaveType = () => {
+    if (leaveInfo.isOnLeave && leaveInfo.leaveType) {
+      return leaveTypes.find(type => type.leave_type_name === leaveInfo.leaveType);
+    }
+    return null;
+  };
+
+  const currentLeaveType = getCurrentLeaveType();
+
+  // Форматирование даты окончания отпуска
+  const formatEndDate = (dateString?: string) => {
+    if (!dateString) return 'Не указана';
+    try {
+      return new Date(dateString).toLocaleDateString('ru-RU');
+    } catch (e) {
+      return 'Неверный формат даты';
+    }
+  };
+
   return (
-    <div className={styles.employeeCard}>
+    <div className={`${styles.employeeCard} ${leaveInfo.isOnLeave ? styles.onLeaveCard : ''} ${isExactMatch ? styles.exactMatchCard : ''}`}>
+      {isExactMatch && (
+        <div className={styles.exactMatchBadge}>
+          <Tag color="blue" icon={<InfoCircleOutlined />}>
+            Полное совпадение
+          </Tag>
+        </div>
+      )}
+      
+      {leaveInfo.isOnLeave && (
+        <div className={styles.leaveBadge}>
+          <Tag color="orange" icon={<HomeOutlined />}>
+            В отпуске
+          </Tag>
+        </div>
+      )}
+      
       <div className={styles.employeePhoto}>
         {photoUrl ? (
           <img src={photoUrl} alt={employee.fullName} />
@@ -77,66 +180,162 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee, onEdit, onDelete 
             <UserOutlined style={{ fontSize: '48px', color: '#8c8c8c' }} />
           </div>
         )}
+        {leaveInfo.isOnLeave && (
+          <div className={styles.leaveOverlay}>
+            <HomeOutlined style={{ fontSize: '24px', color: '#fa8c16' }} />
+          </div>
+        )}
+        {isExactMatch && (
+          <div className={styles.exactMatchOverlay}>
+            <CheckCircleOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+          </div>
+        )}
       </div>
       
       <div className={styles.employeeInfo}>
-        <h3>{employee.fullName}</h3>
+        <div className={styles.employeeHeader}>
+          <h3>{employee.fullName}</h3>
+          {leaveInfo.isOnLeave ? (
+            <Tag color="orange" icon={<HomeOutlined />}>
+              {currentLeaveType?.leave_type_name || 'В отпуске'}
+            </Tag>
+          ) : (
+            <Tag color="green" icon={<CheckCircleOutlined />}>
+              Работает
+            </Tag>
+          )}
+        </div>
         
         <div className={styles.employeeDetails}>
-          <p>
-            <strong>Личный номер:</strong> 
-            <span className={styles.employeeValue}>{employee.personalNumber}</span>
-          </p>
-          <p>
-            <strong>Должность:</strong> 
-            <span className={styles.employeeValue}>{employee.position || 'Не указана'}</span>
-          </p>
-          <p>
-            <strong>Служба:</strong> 
-            <span className={styles.employeeValue}>
-              {employee.serviceType?.serviceTypeName || employee.serviceTypeId || 'Не указана'}
-            </span>
-          </p>
-          <p>
-            <strong>Вид работ:</strong> 
-            <span className={styles.employeeValue}>
-              {employee.workType?.workTypeName || employee.workTypeId || 'Не указан'}
-            </span>
-          </p>
-          {employee.brigadaId && (
-            <p>
-              <strong>Бригада:</strong> 
-              <span className={styles.employeeValue}>
-                {employee.brigada?.brigadaName || `№${employee.brigadaId}`}
-              </span>
-            </p>
-          )}
-          {employee.locomotiveId && (
-            <p>
-              <strong>Локомотив:</strong> 
-              <span className={styles.employeeValue}>
-                {employee.locomotive?.locomotiveName || employee.locomotiveId}
-              </span>
-            </p>
-          )}
-          {employee.phone && (
-            <p>
-              <strong>Телефон:</strong> 
-              <span className={styles.employeeValue}>{employee.phone}</span>
-            </p>
-          )}
-          {employee.birthday && (
-            <p>
-              <strong>Дата рождения:</strong> 
-              <span className={styles.employeeValue}>{formatBirthday(employee.birthday)}</span>
-            </p>
-          )}
-          <div className={styles.employeeAccess}>
-            {employee.hasTrip && <span className={styles.accessBadge}>допуск к выезду магнитогорск-грузовой</span>}
-            {employee.hasCraneman && <span className={styles.accessBadge}>допуск кантовщика</span>}
-            {employee.dieselAccess && <span className={styles.accessBadge}>допуск к тепловозу</span>}
-            {employee.electricAccess && <span className={styles.accessBadge}>допуск к электровозу</span>}
+          <Row gutter={[16, 8]} className={styles.detailsGrid}>
+            <Col span={12}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Служба:</span>
+                <span className={styles.detailValue}>
+                  {employee.serviceType?.serviceTypeName || 'Не указана'}
+                </span>
+              </div>
+            </Col>
+            
+            <Col span={12}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Вид работ:</span>
+                <span className={styles.detailValue}>
+                  {employee.workType?.workTypeName || 'Не указан'}
+                </span>
+              </div>
+            </Col>
+            
+            <Col span={12}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Должность:</span>
+                <span className={styles.detailValue}>
+                  {employee.position || 'Не указана'}
+                </span>
+              </div>
+            </Col>
+            
+            <Col span={12}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Бригада:</span>
+                <span className={styles.detailValue}>
+                  {employee.brigada ? employee.brigada.brigadaName : 'Не указана'}
+                </span>
+              </div>
+            </Col>
+            
+            <Col span={12}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Личный номер:</span>
+                <span className={styles.detailValue}>
+                  {employee.personalNumber}
+                </span>
+              </div>
+            </Col>
+            
+            <Col span={12}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Локомотив:</span>
+                <span className={styles.detailValue}>
+                  {employee.locomotive ? 
+                    `${employee.locomotive.locomotiveName || employee.locomotive.locomotiveId}` 
+                    : 'Не указан'}
+                </span>
+              </div>
+            </Col>
+            
+            <Col span={12}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Дата рождения:</span>
+                <span className={styles.detailValue}>
+                  {formatBirthday(employee.birthday)}
+                </span>
+              </div>
+            </Col>
+            
+            <Col span={12}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Телефон:</span>
+                <span className={styles.detailValue}>
+                  {employee.phone || 'Не указан'}
+                </span>
+              </div>
+            </Col>
+          </Row>
+          
+          <div className={styles.accessSection}>
+            <h4>Допуски:</h4>
+            <div className={styles.accessBadges}>
+              <div className={styles.accessItem}>
+                <span className={styles.accessLabel}>Выезд магнитогорск-грузовой:</span>
+                {employee.hasTrip ? (
+                  <Tag color="green" icon={<CheckOutlined />}>Имеется</Tag>
+                ) : (
+                  <Tag color="default" icon={<CloseOutlined />}>Не имеется</Tag>
+                )}
+              </div>
+              
+              <div className={styles.accessItem}>
+                <span className={styles.accessLabel}>Кантовщик:</span>
+                {employee.hasCraneman ? (
+                  <Tag color="green" icon={<CheckOutlined />}>Имеется</Tag>
+                ) : (
+                  <Tag color="default" icon={<CloseOutlined />}>Не имеется</Tag>
+                )}
+              </div>
+              
+              <div className={styles.accessItem}>
+                <span className={styles.accessLabel}>Тепловоз:</span>
+                {employee.dieselAccess ? (
+                  <Tag color="green" icon={<CheckOutlined />}>Имеется</Tag>
+                ) : (
+                  <Tag color="default" icon={<CloseOutlined />}>Не имеется</Tag>
+                )}
+              </div>
+              
+              <div className={styles.accessItem}>
+                <span className={styles.accessLabel}>Электровоз:</span>
+                {employee.electricAccess ? (
+                  <Tag color="green" icon={<CheckOutlined />}>Имеется</Tag>
+                ) : (
+                  <Tag color="default" icon={<CloseOutlined />}>Не имеется</Tag>
+                )}
+              </div>
+            </div>
           </div>
+          
+          {leaveInfo.isOnLeave && (
+            <div className={styles.leaveInfo}>
+              <h4>Информация об отпуске:</h4>
+              <div className={styles.leaveDetails}>
+                <p><strong>Тип отпуска:</strong> {currentLeaveType?.leave_type_name || 'Не указан'}</p>
+                <p><strong>Дата окончания:</strong> {formatEndDate(leaveInfo.endDate)}</p>
+                {currentLeaveType?.description && (
+                  <p><strong>Описание:</strong> {currentLeaveType.description}</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
@@ -146,6 +345,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee, onEdit, onDelete 
           icon={<EditOutlined />}
           onClick={() => onEdit(employee)}
           className={`${styles.actionBtn} ${styles.editBtn}`}
+          disabled={leaveInfo.isOnLeave}
         >
           Редактировать
         </Button>
@@ -154,6 +354,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee, onEdit, onDelete 
           icon={<DeleteOutlined />}
           onClick={() => onDelete(employee.personalNumber, employee.fullName)}
           className={`${styles.actionBtn} ${styles.deleteBtn}`}
+          disabled={leaveInfo.isOnLeave}
         >
           Удалить
         </Button>
@@ -176,7 +377,7 @@ const EmployeesManager: React.FC = () => {
     successMessage 
   } = useSelector((state: RootState) => state.employees);
   
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [deleteModal, setDeleteModal] = useState(false);
   const [addModal, setAddModal] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<{ number: number; name: string } | null>(null);
@@ -188,13 +389,154 @@ const EmployeesManager: React.FC = () => {
     'пом.маш',
     'дублер'
   ]);
+  const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
+  const [loadingLeaves, setLoadingLeaves] = useState(false);
+  const [displayedEmployees, setDisplayedEmployees] = useState<EmployeeType[]>([]);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [leavesLoaded, setLeavesLoaded] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     dispatch(fetchAllEmployees());
     dispatch(fetchServiceTypes());
     dispatch(fetchBrigadas());
     dispatch(fetchLocomotives());
+    fetchLeaveTypes();
   }, [dispatch]);
+
+  // Оптимизированная загрузка отпусков
+  useEffect(() => {
+    const fetchInitialLeaves = async () => {
+      try {
+        setLoadingLeaves(true);
+        const response = await fetch('http://localhost:3000/leaves');
+        const data = await response.json();
+        setLeaves(data);
+        setLeavesLoaded(true);
+      } catch (err) {
+        console.error('Ошибка при загрузке отпусков:', err);
+        message.error('Не удалось загрузить информацию об отпусках');
+      } finally {
+        setLoadingLeaves(false);
+      }
+    };
+
+    if (employees.length > 0) {
+      fetchInitialLeaves();
+      
+      // Отложенная загрузка остальных данных (если нужно) через 3 секунды
+      timerRef.current = setTimeout(() => {
+        // Можно добавить дополнительную загрузку данных здесь
+      }, 3000);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [employees.length]);
+
+  // Эффект для постепенной загрузки сотрудников
+  useEffect(() => {
+    if (employees.length > 0 && !initialLoadComplete) {
+      setDisplayedEmployees(employees);
+      setInitialLoadComplete(true);
+    }
+  }, [employees, initialLoadComplete]);
+
+  // Улучшенная функция для поиска сотрудников
+  const searchEmployees = useCallback((query: string, employeesList: EmployeeType[]) => {
+    if (!query.trim()) {
+      return {
+        exactMatches: [],
+        allMatches: employeesList,
+        topMatches: employeesList
+      };
+    }
+    
+    const searchQuery = query.toLowerCase().trim();
+    const results = [];
+    
+    for (const employee of employeesList) {
+      let isExactMatch = false;
+      let isMatch = false;
+      
+      // Проверка полного совпадения по личному номеру
+      if (employee.personalNumber?.toString() === searchQuery) {
+        isExactMatch = true;
+        isMatch = true;
+      }
+      
+      // Проверка полного совпадения по ФИО
+      if (employee.fullName?.toLowerCase() === searchQuery) {
+        isExactMatch = true;
+        isMatch = true;
+      }
+      
+      // Проверка частичного совпадения по ФИО
+      if (!isMatch && employee.fullName?.toLowerCase().includes(searchQuery)) {
+        isMatch = true;
+      }
+      
+      // Проверка по личному номеру (частичное совпадение)
+      if (!isMatch && employee.personalNumber?.toString().includes(searchQuery)) {
+        isMatch = true;
+      }
+      
+      // ===== ИЗМЕНЕНИЕ: УБРАНА ПРОВЕРКА ПО ДОЛЖНОСТИ =====
+      // if (!isMatch && employee.position?.toLowerCase().includes(searchQuery)) {
+      //   isMatch = true;
+      // }
+      // ===================================================
+      
+      if (isMatch) {
+        results.push({
+          ...employee,
+          isExactMatch,
+          // Приоритет для отображения: точные совпадения первые
+          priority: isExactMatch ? 2 : (employee.fullName?.toLowerCase().includes(searchQuery) ? 1 : 0)
+        });
+      }
+    }
+    
+    // Сортировка: сначала точные совпадения, потом по приоритету
+    results.sort((a, b) => {
+      if (a.isExactMatch && !b.isExactMatch) return -1;
+      if (!a.isExactMatch && b.isExactMatch) return 1;
+      return b.priority - a.priority;
+    });
+    
+    // Разделяем на точные совпадения и все остальные
+    const exactMatches = results.filter(emp => emp.isExactMatch);
+    const allMatches = results;
+    
+    // Берем топ 5 результатов для отображения
+    const topMatches = results.slice(0, 5);
+    
+    return {
+      exactMatches,
+      allMatches,
+      topMatches
+    };
+  }, []);
+
+  // Мемоизированные результаты поиска
+  const searchResults = useMemo(() => {
+    return searchEmployees(searchInput, displayedEmployees);
+  }, [searchInput, displayedEmployees, searchEmployees]);
+
+  // Функция для загрузки типов отпусков
+  const fetchLeaveTypes = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/leave-types');
+      const data = await response.json();
+      setLeaveTypes(data);
+    } catch (err) {
+      console.error('Ошибка при загрузке типов отпусков:', err);
+    }
+  };
 
   useEffect(() => {
     if (successMessage) {
@@ -266,13 +608,15 @@ const EmployeesManager: React.FC = () => {
     }
   };
 
-  const filteredEmployees = employees.filter(employee => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      employee.fullName?.toLowerCase().includes(searchLower) ||
-      employee.personalNumber?.toString().includes(searchTerm)
-    );
-  });
+  // Обновление поискового инпута
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+  };
+
+  // Быстрый поиск при нажатии Enter
+  const handleSearch = (value: string) => {
+    setSearchInput(value.trim());
+  };
 
   const handleDeleteClick = useCallback((personalNumber: number, fullName: string) => {
     setEmployeeToDelete({ number: personalNumber, name: fullName });
@@ -313,7 +657,6 @@ const EmployeesManager: React.FC = () => {
         formData.append('brigadaId', values.brigadaId.toString());
       }
       
-      // Исправлено: locomotiveId передается как строка
       if (values.locomotiveId && values.locomotiveId !== 'undefined') {
         formData.append('locomotiveId', values.locomotiveId.toString());
       }
@@ -349,6 +692,48 @@ const EmployeesManager: React.FC = () => {
     }
   };
 
+  // Функция для подсчета сотрудников в отпуске и работающих
+  const getLeaveStats = () => {
+    if (!leavesLoaded || leaves.length === 0) {
+      return { onLeaveCount: 0, workingCount: employees.length };
+    }
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let onLeaveCount = 0;
+    
+    employees.forEach(employee => {
+      const employeeLeaves = leaves.filter(leave => 
+        leave.employee_personal_number === employee.personalNumber
+      );
+      
+      for (const leave of employeeLeaves) {
+        const startDate = new Date(leave.start_date);
+        const endDate = new Date(leave.end_date);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        
+        if (today >= startDate && today <= endDate) {
+          onLeaveCount++;
+          break;
+        }
+      }
+    });
+    
+    return { 
+      onLeaveCount, 
+      workingCount: employees.length - onLeaveCount 
+    };
+  };
+
+  const leaveStats = getLeaveStats();
+
+  // Список сотрудников для отображения (с поиском или без)
+  const employeesToDisplay = searchInput 
+    ? searchResults.topMatches 
+    : displayedEmployees;
+
   if (status === 'loading' && employees.length === 0) {
     return (
       <div className={styles.loadingContainer}>
@@ -374,22 +759,49 @@ const EmployeesManager: React.FC = () => {
       </div>
       
       <div className={styles.searchSection}>
-        <Search
-          placeholder="Поиск по ФИО или личному номеру..."
-          allowClear
-          size="large"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onSearch={(value) => setSearchTerm(value)}
-          prefix={<SearchOutlined />}
-          className={styles.searchInput}
-        />
+        <div className={styles.searchInputContainer}>
+          {/* ===== ИЗМЕНЕНИЕ: УБРАНО "ИЛИ ДОЛЖНОСТИ" ИЗ ПЛЕЙСХОЛДЕРА ===== */}
+          <Search
+            placeholder="Поиск по ФИО или личному номеру..."
+            allowClear
+            size="large"
+            value={searchInput}
+            onChange={handleSearchChange}
+            onSearch={handleSearch}
+            prefix={<SearchOutlined />}
+            className={styles.searchInput}
+          />
+          {/* ============================================================ */}
+          {searchInput && (
+            <div className={styles.searchInfo}>
+              <span className={styles.searchInfoText}>
+                {searchResults.exactMatches.length > 0 
+                  ? `Найдено полных совпадений: ${searchResults.exactMatches.length}` 
+                  : `Найдено сотрудников: ${searchResults.allMatches.length}`}
+              </span>
+            </div>
+          )}
+        </div>
         
         <div className={styles.searchStats}>
           <span className={styles.statLabel}>Всего сотрудников:</span>
           <span className={styles.statValue}>{employees.length}</span>
-          <span className={styles.statLabel}>Найдено:</span>
-          <span className={styles.statValue}>{filteredEmployees.length}</span>
+          <span className={styles.statLabel}>Показано:</span>
+          <span className={styles.statValue}>{displayedEmployees.length}</span>
+          {searchInput ? (
+            <>
+              <span className={styles.statLabel}>Результатов:</span>
+              <span className={styles.statValue}>{searchResults.allMatches.length}</span>
+            </>
+          ) : null}
+          <span className={styles.statLabel}>В отпуске:</span>
+          <span className={`${styles.statValue} ${styles.onLeave}`}>
+            {leaveStats.onLeaveCount}
+          </span>
+          <span className={styles.statLabel}>Работают:</span>
+          <span className={`${styles.statValue} ${styles.working}`}>
+            {leaveStats.workingCount}
+          </span>
         </div>
       </div>
 
@@ -400,26 +812,71 @@ const EmployeesManager: React.FC = () => {
             Повторить попытку
           </Button>
         </div>
-      ) : filteredEmployees.length === 0 ? (
+      ) : searchInput && searchResults.allMatches.length === 0 ? (
         <div className={styles.noResults}>
-          <p>Сотрудники не найдены</p>
-          {searchTerm && (
-            <Button onClick={() => setSearchTerm('')}>
-              Очистить поиск
-            </Button>
-          )}
+          <p>Сотрудники не найдены по запросу "{searchInput}"</p>
+          <Button onClick={() => setSearchInput('')}>
+            Очистить поиск
+          </Button>
         </div>
       ) : (
-        <div className={styles.employeesGrid}>
-          {filteredEmployees.map((employee) => (
-            <EmployeeCard
-              key={employee.personalNumber}
-              employee={employee}
-              onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
-            />
-          ))}
-        </div>
+        <>
+          {loadingLeaves && (
+            <div className={styles.loadingOverlay}>
+              <div className={styles.spinContainer}>
+                <Spin size="large" />
+                <div className={styles.spinText}>Загрузка информации об отпусках...</div>
+              </div>
+            </div>
+          )}
+          
+          <div className={styles.employeesGrid}>
+            {employeesToDisplay.map((employee: any) => (
+              <EmployeeCard
+                key={employee.personalNumber}
+                employee={employee}
+                leaves={leaves}
+                leaveTypes={leaveTypes}
+                onEdit={handleEditClick}
+                onDelete={handleDeleteClick}
+                isExactMatch={employee.isExactMatch}
+              />
+            ))}
+          </div>
+          
+          {searchInput && searchResults.allMatches.length > searchResults.topMatches.length && (
+            <div className={styles.searchMoreInfo}>
+              <div className={styles.searchMoreText}>
+                Показаны {searchResults.topMatches.length} наиболее релевантных результатов из {searchResults.allMatches.length}
+              </div>
+              {searchResults.exactMatches.length === 0 && (
+                <Button 
+                  type="link" 
+                  onClick={() => {
+                    message.info('Для просмотра всех результатов уточните поисковый запрос');
+                  }}
+                >
+                  Уточните запрос для поиска остальных сотрудников
+                </Button>
+              )}
+            </div>
+          )}
+          
+          {!searchInput && displayedEmployees.length < employees.length && (
+            <div className={styles.loadMoreContainer}>
+              <div className={styles.loadMoreInfo}>
+                Показано {displayedEmployees.length} из {employees.length} сотрудников
+              </div>
+              <Button 
+                type="primary"
+                onClick={() => setDisplayedEmployees(employees)}
+                className={styles.loadMoreButton}
+              >
+                Показать всех сотрудников
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       <Modal
