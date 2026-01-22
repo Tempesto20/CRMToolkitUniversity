@@ -91,7 +91,7 @@
 .employeesGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px; /* Расстояние между карточками 20px */
+  gap: 20px;
 }
 
 .employeeCard {
@@ -103,15 +103,12 @@
   flex-direction: column;
   transition: all 0.3s ease;
   
-  /* Рамка темно-синего цвета */
   border: 4px solid #001529;
   
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-    
-    /* Изменение фона при наведении на светло-синий */
-    background-color: #e6f7ff; /* Светло-синий цвет фона при наведении */
+    background-color: #e6f7ff;
   }
 }
 
@@ -212,6 +209,68 @@
   }
 }
 
+/* Стили для модального окна добавления сотрудника */
+.addEmployeeModal {
+  :global(.ant-modal-content) {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  :global(.ant-modal-header) {
+    background: #1890ff;
+    
+    :global(.ant-modal-title) {
+      color: white;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+    }
+  }
+}
+
+.addEmployeeForm {
+  .accessSection {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+    
+    h4 {
+      margin-bottom: 16px;
+      color: #262626;
+    }
+  }
+  
+  .formFooter {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+    
+    .cancelButton {
+      background: #ff4d4f;
+      border-color: #ff4d4f;
+      color: white;
+      
+      &:hover {
+        background: #ff7875;
+        border-color: #ff7875;
+      }
+    }
+    
+    .submitButton {
+      background: #52c41a;
+      border-color: #52c41a;
+      color: white;
+      
+      &:hover {
+        background: #73d13d;
+        border-color: #73d13d;
+      }
+    }
+  }
+}
+
 .deleteConfirmation {
   padding: 16px 0;
   
@@ -245,5 +304,14 @@
   
   .employeeCard {
     margin-bottom: 20px;
+  }
+  
+  .addEmployeeModal {
+    width: 90% !important;
+    margin: 10px;
+    
+    :global(.ant-modal-body) {
+      padding: 16px;
+    }
   }
 }
