@@ -11,7 +11,7 @@ import {
 } from '../redux/slices/employeesSlice';
 import { Modal, Button, message, Input, Spin } from 'antd';
 import { SearchOutlined, UserOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import './EmployeesManager.module.scss';
+import styles from './EmployeesManager.module.scss';
 
 const { Search } = Input;
 
@@ -33,45 +33,45 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee, onEdit, onDelete 
   const photoUrl = getPhotoUrl();
 
   return (
-    <div className="employee-card">
-      <div className="employee-photo">
+    <div className={styles.employeeCard}>
+      <div className={styles.employeePhoto}>
         {photoUrl ? (
           <img src={photoUrl} alt={employee.fullName} />
         ) : (
-          <div className="default-photo">
+          <div className={styles.defaultPhoto}>
             <UserOutlined style={{ fontSize: '48px', color: '#8c8c8c' }} />
           </div>
         )}
       </div>
       
-      <div className="employee-info">
+      <div className={styles.employeeInfo}>
         <h3>{employee.fullName}</h3>
         
-        <div className="employee-details">
+        <div className={styles.employeeDetails}>
           <p>
             <strong>Личный номер:</strong> 
-            <span className="employee-value">{employee.personalNumber}</span>
+            <span className={styles.employeeValue}>{employee.personalNumber}</span>
           </p>
           <p>
             <strong>Должность:</strong> 
-            <span className="employee-value">{employee.position || 'Не указана'}</span>
+            <span className={styles.employeeValue}>{employee.position || 'Не указана'}</span>
           </p>
           <p>
             <strong>Служба:</strong> 
-            <span className="employee-value">
+            <span className={styles.employeeValue}>
               {employee.serviceType?.serviceTypeName || employee.serviceTypeId || 'Не указана'}
             </span>
           </p>
           <p>
             <strong>Вид работ:</strong> 
-            <span className="employee-value">
+            <span className={styles.employeeValue}>
               {employee.workType?.workTypeName || employee.workTypeId || 'Не указан'}
             </span>
           </p>
           {employee.brigadaId && (
             <p>
               <strong>Бригада:</strong> 
-              <span className="employee-value">
+              <span className={styles.employeeValue}>
                 {employee.brigada?.brigadaName || `№${employee.brigadaId}`}
               </span>
             </p>
@@ -79,24 +79,24 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee, onEdit, onDelete 
           {employee.phone && (
             <p>
               <strong>Телефон:</strong> 
-              <span className="employee-value">{employee.phone}</span>
+              <span className={styles.employeeValue}>{employee.phone}</span>
             </p>
           )}
-          <div className="employee-access">
-            {employee.hasTrip && <span className="access-badge">Поездка</span>}
-            {employee.hasCraneman && <span className="access-badge">Крановщик</span>}
-            {employee.dieselAccess && <span className="access-badge">Дизель</span>}
-            {employee.electricAccess && <span className="access-badge">Электровоз</span>}
+          <div className={styles.employeeAccess}>
+            {employee.hasTrip && <span className={styles.accessBadge}>допуск к выезду магнитогорск-грузовой</span>}
+            {employee.hasCraneman && <span className={styles.accessBadge}>допуск кантовщика</span>}
+            {employee.dieselAccess && <span className={styles.accessBadge}>допуск к тепловозу</span>}
+            {employee.electricAccess && <span className={styles.accessBadge}>допуск к электровозу</span>}
           </div>
         </div>
       </div>
       
-      <div className="employee-actions">
+      <div className={styles.employeeActions}>
         <Button 
           type="primary" 
           icon={<EditOutlined />}
           onClick={() => onEdit(employee)}
-          className="action-btn edit-btn"
+          className={`${styles.actionBtn} ${styles.editBtn}`}
         >
           Редактировать
         </Button>
@@ -104,7 +104,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee, onEdit, onDelete 
           danger 
           icon={<DeleteOutlined />}
           onClick={() => onDelete(employee.personalNumber, employee.fullName)}
-          className="action-btn delete-btn"
+          className={`${styles.actionBtn} ${styles.deleteBtn}`}
         >
           Удалить
         </Button>
@@ -178,7 +178,7 @@ const EmployeesManager: React.FC = () => {
 
   if (status === 'loading' && employees.length === 0) {
     return (
-      <div className="loading-container">
+      <div className={styles.loadingContainer}>
         <Spin size="large" />
         <p>Загрузка сотрудников...</p>
       </div>
@@ -186,17 +186,17 @@ const EmployeesManager: React.FC = () => {
   }
 
   return (
-    <div className="employees-manager">
-      <div className="page-header">
+    <div className={styles.employeesManager}>
+      <div className={styles.pageHeader}>
         <h1>Управление сотрудниками</h1>
-        <div className="header-actions">
+        <div className={styles.headerActions}>
           <Button type="primary" size="large">
             + Добавить сотрудника
           </Button>
         </div>
       </div>
       
-      <div className="search-section">
+      <div className={styles.searchSection}>
         <Search
           placeholder="Поиск по ФИО или личному номеру..."
           allowClear
@@ -205,26 +205,26 @@ const EmployeesManager: React.FC = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           onSearch={(value) => setSearchTerm(value)}
           prefix={<SearchOutlined />}
-          className="search-input"
+          className={styles.searchInput}
         />
         
-        <div className="search-stats">
-          <span className="stat-label">Всего сотрудников:</span>
-          <span className="stat-value">{employees.length}</span>
-          <span className="stat-label">Найдено:</span>
-          <span className="stat-value">{filteredEmployees.length}</span>
+        <div className={styles.searchStats}>
+          <span className={styles.statLabel}>Всего сотрудников:</span>
+          <span className={styles.statValue}>{employees.length}</span>
+          <span className={styles.statLabel}>Найдено:</span>
+          <span className={styles.statValue}>{filteredEmployees.length}</span>
         </div>
       </div>
 
       {error && status === 'error' ? (
-        <div className="error-message">
+        <div className={styles.errorMessage}>
           <p>Ошибка при загрузке сотрудников: {error}</p>
           <Button onClick={() => dispatch(fetchAllEmployees())}>
             Повторить попытку
           </Button>
         </div>
       ) : filteredEmployees.length === 0 ? (
-        <div className="no-results">
+        <div className={styles.noResults}>
           <p>Сотрудники не найдены</p>
           {searchTerm && (
             <Button onClick={() => setSearchTerm('')}>
@@ -233,7 +233,7 @@ const EmployeesManager: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="employees-grid">
+        <div className={styles.employeesGrid}>
           {filteredEmployees.map((employee) => (
             <EmployeeCard
               key={employee.personalNumber}
@@ -256,11 +256,11 @@ const EmployeesManager: React.FC = () => {
         okType="danger"
       >
         {employeeToDelete && (
-          <div className="delete-confirmation">
+          <div className={styles.deleteConfirmation}>
             <p>Вы уверены, что хотите удалить сотрудника?</p>
             <p><strong>ФИО:</strong> {employeeToDelete.name}</p>
             <p><strong>Личный номер:</strong> {employeeToDelete.number}</p>
-            <p className="warning-text">Это действие нельзя отменить!</p>
+            <p className={styles.warningText}>Это действие нельзя отменить!</p>
           </div>
         )}
       </Modal>
