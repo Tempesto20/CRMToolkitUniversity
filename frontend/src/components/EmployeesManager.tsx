@@ -416,38 +416,7 @@ const EmployeesManager: React.FC = () => {
     fetchLeaveTypes();
   }, [dispatch]);
 
-  // Оптимизированная загрузка отпусков
-  useEffect(() => {
-    const fetchInitialLeaves = async () => {
-      try {
-        setLoadingLeaves(true);
-        const response = await fetch('http://localhost:3000/leaves');
-        const data = await response.json();
-        setLeaves(data);
-        setLeavesLoaded(true);
-      } catch (err) {
-        console.error('Ошибка при загрузке отпусков:', err);
-        message.error('Не удалось загрузить информацию об отпусках');
-      } finally {
-        setLoadingLeaves(false);
-      }
-    };
 
-    if (employees.length > 0) {
-      fetchInitialLeaves();
-      
-      // Отложенная загрузка остальных данных (если нужно) через 3 секунды
-      timerRef.current = setTimeout(() => {
-        // Можно добавить дополнительную загрузку данных здесь
-      }, 3000);
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, [employees.length]);
 
   // Эффект для постепенной загрузки сотрудников
   useEffect(() => {
