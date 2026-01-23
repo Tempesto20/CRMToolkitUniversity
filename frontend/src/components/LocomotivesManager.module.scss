@@ -1,132 +1,524 @@
-// LocomotivesManager.module.scss
 .locomotivesManager {
   padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  
-  h2, h3 {
-    color: #333;
-    margin-bottom: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 16px 24px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  h1 {
+    margin: 0;
+    color: #1890ff;
+    font-size: 24px;
+    font-weight: 600;
   }
-  
-  .createForm {
-    margin-bottom: 30px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #f9f9f9;
+}
+
+.headerActions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    opacity: 0.9;
   }
-  
-  .formGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
+}
+
+.btnPrimary {
+  background: #1890ff;
+  color: white;
+
+  &:hover {
+    background: #40a9ff;
   }
-  
-  .formGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+}
+
+.btnSecondary {
+  background: #f0f0f0;
+  color: #333;
+
+  &:hover {
+    background: #e0e0e0;
   }
-  
-  .checkboxGroup {
-    flex-direction: row;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
+}
+
+.btnDanger {
+  background: #ff4d4f;
+  color: white;
+
+  &:hover {
+    background: #ff7875;
   }
-  
-  label {
-    font-weight: 500;
-    color: #555;
+
+  &:disabled {
+    background: #ffccc7;
+    cursor: not-allowed;
   }
-  
-  input, select {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
+}
+
+.btnIcon {
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.btnEdit:hover {
+  color: #1890ff;
+}
+
+.btnDelete:hover {
+  color: #ff4d4f;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.statCard {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.statIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+
+  &.success {
+    background: #f6ffed;
+    color: #52c41a;
   }
-  
-  input[type="checkbox"] {
-    margin-right: 5px;
+
+  &.warning {
+    background: #fff7e6;
+    color: #fa8c16;
   }
-  
-  button {
-    padding: 8px 16px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
+
+  &.info {
+    background: #e6f7ff;
+    color: #1890ff;
   }
-  
-  button:hover {
-    background-color: #0056b3;
+}
+
+.statLabel {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.statValue {
+  margin: 4px 0 0 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.searchSection {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
   }
-  
-  .deleteBtn {
-    background-color: #dc3545;
+}
+
+.filterControl {
+  width: 100%;
+}
+
+.formSelect {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+
+  &:focus {
+    outline: none;
+    border-color: #40a9ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
   }
-  
-  .deleteBtn:hover {
-    background-color: #c82333;
-  }
-  
-  .filtersSection {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #f0f8ff;
-    border-radius: 5px;
-  }
-  
-  .filterButtons {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  
-  .serviceFilter {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .locomotivesTable {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-  
-  .locomotivesTable th,
-  .locomotivesTable td {
-    border: 1px solid #ddd;
-    padding: 10px;
+}
+
+.tableContainer {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.tableResponsive {
+  overflow-x: auto;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    background: #fafafa;
+    padding: 16px;
     text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+    white-space: nowrap;
   }
-  
-  .locomotivesTable th {
-    background-color: #f2f2f2;
-    font-weight: bold;
+
+  td {
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
   }
-  
-  .locomotivesTable tr:nth-child(even) {
-    background-color: #f9f9f9;
+
+  tbody tr:hover {
+    background: #fafafa;
   }
-  
-  .locomotivesTable tr:hover {
-    background-color: #f1f1f1;
+}
+
+.statusBadge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.success {
+    background: #f6ffed;
+    color: #52c41a;
   }
-  
-  .locomotivesTable tr.inactive {
-    background-color: #ffe6e6;
+
+  &.warning {
+    background: #fff7e6;
+    color: #fa8c16;
   }
-  
-  .actions {
+}
+
+.actionsCell {
+  white-space: nowrap;
+}
+
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1890ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.availableLocomotives {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
     display: flex;
-    gap: 5px;
-    min-width: 180px;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.iconSuccess {
+  color: #52c41a;
+}
+
+.availableList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.availableTag {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  color: #52c41a;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: white;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  &.modalSm {
+    max-width: 400px;
+  }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+.btnClose {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+
+  &:hover {
+    color: #333;
+  }
+}
+
+.modalBody {
+  padding: 20px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    padding: 8px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    font-size: 14px;
+
+    &:focus {
+      outline: none;
+      border-color: #40a9ff;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+
+    &:disabled {
+      background: #f5f5f5;
+      cursor: not-allowed;
+    }
+  }
+
+  input[type="checkbox"] {
+    margin-right: 8px;
+  }
+
+  label[for^="checkbox"] {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+}
+
+.modalFooter {
+  padding: 20px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  animation: slideIn 0.3s ease;
+
+  &.success {
+    background: #f6ffed;
+    border: 1px solid #b7eb8f;
+    color: #52c41a;
+  }
+
+  &.error {
+    background: #fff2f0;
+    border: 1px solid #ffccc7;
+    color: #ff4d4f;
+  }
+
+  p {
+    margin: 0;
+    flex: 1;
+  }
+}
+
+.notificationClose {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: inherit;
+  margin-left: 12px;
+}
+
+.loadingContainer,
+.errorMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  text-align: center;
+}
+
+.errorMessage {
+  p {
+    margin-bottom: 20px;
+    color: #ff4d4f;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// Адаптивность
+@media (max-width: 768px) {
+  .pageHeader {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .headerActions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tableResponsive {
+    font-size: 14px;
+  }
+
+  .dataTable {
+    th,
+    td {
+      padding: 12px 8px;
+    }
+  }
+
+  .modal {
+    width: 95%;
   }
 }

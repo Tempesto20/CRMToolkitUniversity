@@ -9,6 +9,30 @@ export const fetchLocomotives = createAsyncThunk(
   }
 );
 
+export const fetchServiceTypes = createAsyncThunk(
+  'locomotives/fetchServiceTypesStatus',
+  async () => {
+    const { data } = await axios.get('http://localhost:3000/service-types');
+    return data as any[];
+  }
+);
+
+export const fetchWorkTypes = createAsyncThunk(
+  'locomotives/fetchWorkTypesStatus',
+  async () => {
+    const { data } = await axios.get('http://localhost:3000/work-types');
+    return data as any[];
+  }
+);
+
+export const fetchLocationWork = createAsyncThunk(
+  'locomotives/fetchLocationWorkStatus',
+  async () => {
+    const { data } = await axios.get('http://localhost:3000/location-work');
+    return data as any[];
+  }
+);
+
 export const fetchAvailableLocomotives = createAsyncThunk(
   'locomotives/fetchAvailableLocomotivesStatus',
   async () => {
@@ -59,20 +83,30 @@ export const fetchLocomotiveStats = createAsyncThunk(
 
 interface LocomotiveState {
   locomotives: any[];
+  serviceTypes: any[];
+  workTypes: any[];
+  locations: any[];
   availableLocomotives: any[];
   locomotivesByService: any[];
   stats: any;
   status: 'idle' | 'loading' | 'error';
+  deleteStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
+  successMessage: string | null;
 }
 
 const initialState: LocomotiveState = {
   locomotives: [],
+  serviceTypes: [],
+  workTypes: [],
+  locations: [],
   availableLocomotives: [],
   locomotivesByService: [],
   stats: null,
   status: 'idle',
+  deleteStatus: 'idle',
   error: null,
+  successMessage: null,
 };
 
 const locomotivesSlice = createSlice({
@@ -81,6 +115,12 @@ const locomotivesSlice = createSlice({
   reducers: {
     clearLocomotivesByService: (state) => {
       state.locomotivesByService = [];
+    },
+    clearSuccessMessage: (state) => {
+      state.successMessage = null;
+    },
+    resetDeleteStatus: (state) => {
+      state.deleteStatus = 'idle';
     }
   },
   extraReducers: (builder) => {
@@ -97,17 +137,38 @@ const locomotivesSlice = createSlice({
         state.status = 'error';
         state.error = action.error.message || 'Failed to fetch locomotives';
       })
-      .addCase(fetchAvailableLocomotives.fulfilled, (state, action) => {
-        state.availableLocomotives = action.payload;
+      
+      .addCase(fetchServiceTypes.fulfilled, (state, action) => {
+        state.serviceTypes = action.payload;
       })
-      .addCase(fetchLocomotivesByService.fulfilled, (state, action) => {
-        state.locomotivesByService = action.payload;
+      
+      .addCase(fetchWorkTypes.fulfilled, (state, action) => {
+        state.workTypes = action.payload;
       })
-      .addCase(fetchLocomotiveStats.fulfilled, (state, action) => {
-        state.stats = action.payload;
+      
+      .addCase(fetchLocationWork.fulfilled, (state, action) => {
+        state.locations = action.payload;
       })
+      
+      .addCase(deleteLocomotive.pending, (state) => {
+        state.deleteStatus = 'loading';
+        state.error = null;
+      })
+      .addCase(deleteLocomotive.fulfilled, (state, action) => {
+        state.locomotives = state.locomotives.filter(
+          loc => loc.locomotiveId !== action.payload
+        );
+        state.deleteStatus = 'succeeded';
+        state.successMessage = 'Локомотив успешно удален';
+      })
+      .addCase(deleteLocomotive.rejected, (state, action) => {
+        state.deleteStatus = 'failed';
+        state.error = action.error.message || 'Failed to delete locomotive';
+      })
+      
       .addCase(createLocomotive.fulfilled, (state, action) => {
         state.locomotives.push(action.payload);
+        state.successMessage = 'Локомотив успешно добавлен';
       })
       .addCase(updateLocomotive.fulfilled, (state, action) => {
         const index = state.locomotives.findIndex(
@@ -116,14 +177,24 @@ const locomotivesSlice = createSlice({
         if (index !== -1) {
           state.locomotives[index] = action.payload;
         }
+        state.successMessage = 'Локомотив успешно обновлен';
       })
-      .addCase(deleteLocomotive.fulfilled, (state, action) => {
-        state.locomotives = state.locomotives.filter(
-          loc => loc.locomotiveId !== action.payload
-        );
+      
+      .addCase(fetchAvailableLocomotives.fulfilled, (state, action) => {
+        state.availableLocomotives = action.payload;
+      })
+      .addCase(fetchLocomotivesByService.fulfilled, (state, action) => {
+        state.locomotivesByService = action.payload;
+      })
+      .addCase(fetchLocomotiveStats.fulfilled, (state, action) => {
+        state.stats = action.payload;
       });
   },
 });
 
-export const { clearLocomotivesByService } = locomotivesSlice.actions;
+export const { 
+  clearLocomotivesByService, 
+  clearSuccessMessage, 
+  resetDeleteStatus 
+} = locomotivesSlice.actions;
 export default locomotivesSlice.reducer;

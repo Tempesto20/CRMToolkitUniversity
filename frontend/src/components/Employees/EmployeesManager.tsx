@@ -429,16 +429,7 @@ const EmployeesManager: React.FC = () => {
           </Button>
         </div>
       ) : (
-        <>
-          {/* {loadingLeaves && (
-            <div className={styles.loadingOverlay}>
-              <div className={styles.spinContainer}>
-                <Spin size="large" />
-                <div className={styles.spinText}>Загрузка информации об отпусках...</div>
-              </div>
-            </div>
-          )} */}
-          
+        <>        
           <div className={styles.employeesGrid}>
             {employeesToDisplay.map((employee: any) => (
               <EmployeeCard
