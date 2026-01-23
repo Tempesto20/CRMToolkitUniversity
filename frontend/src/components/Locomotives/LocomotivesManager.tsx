@@ -14,8 +14,8 @@ import {
   clearLocomotivesByService,
   clearSuccessMessage,
   resetDeleteStatus
-} from '../redux/slices/locomotivesSlice';
-import { RootState, AppDispatch } from '../redux/store';
+} from '../../redux/slices/locomotivesSlice';
+import { RootState, AppDispatch } from '../../redux/store';
 import styles from './LocomotivesManager.module.scss';
 
 interface FormData {
@@ -273,7 +273,7 @@ const LocomotivesManager: React.FC = () => {
             <span>✓</span>
           </div>
           <div className={styles.statContent}>
-            <p className={styles.statLabel}>Доступные</p>
+            <p className={styles.statLabel}>На линии</p>
             <p className={styles.statValue}>{stats?.operational || 0}</p>
           </div>
         </div>
@@ -299,9 +299,9 @@ const LocomotivesManager: React.FC = () => {
         </div>
       </div>
 
-      {/* Фильтр по типу обслуживания */}
+      {/* Фильтр по виду службы */}
       <div className={styles.searchSection}>
-        <h2>Фильтр по типу обслуживания</h2>
+        <h2>Фильтр по виду службы</h2>
         <div className={styles.filterControl}>
           <select
             value={selectedServiceType.toString()}
@@ -347,7 +347,7 @@ const LocomotivesManager: React.FC = () => {
                     <span className={`${styles.statusBadge} ${
                       locomotive.operationalStatus ? styles.success : styles.warning
                     }`}>
-                      {locomotive.operationalStatus ? 'В работе' : 'В депо'}
+                      {locomotive.operationalStatus ? 'На линии' : 'В депо'}
                       {/* {locomotive.locomotiveDepo && ' В депо'} */}
                     </span>
                   </td>

@@ -4,15 +4,11 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { store } from './redux/store';
 import Layout from './components/Layout/Layout';
 import HomePage from './components/Home/HomePage';
-// import AddEmployeeForm from './components/AddEmployeeForm';
 import EmployeesManager from './components/Employees/EmployeesManager';
-import LocomotivesManager from './components/LocomotivesManager';
+import LocomotivesManager from './components/Locomotives/LocomotivesManager';
 import LeavesManager from './components/Leaves/LeavesManager';
-import WorkTypesManager from './components/WorkTypesManager';
-import ServiceTypesManager from './components/ServiceTypesManager';
-import LocationWorkManager from './components/LocationWorkManager';
+import LocationWorkManager from './components/Locations/LocationWorkManager';
 import LeaveTypesManager from './components/LeaveTypesManager';
-// import BrigadaComponent from './components/BrigadaComponent';
 
 function App() {
   return (
@@ -21,15 +17,11 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            {/* <Route path="/add-employee" element={<AddEmployeeForm />} /> */}
             <Route path="/employees" element={<EmployeesManager />} />
             <Route path="/locomotives" element={<LocomotivesManager />} />
             <Route path="/leaves" element={<LeavesManager />} />
-            <Route path="/work-types" element={<WorkTypesManager />} />
-            <Route path="/service-types" element={<ServiceTypesManager />} />
             <Route path="/location-works" element={<LocationWorkManager />} />
             <Route path="/leave-types" element={<LeaveTypesManager />} />
-            {/* <Route path="/brigadas" element={<BrigadaComponent />} /> */}
           </Routes>
         </Layout>
       </Router>

@@ -21,7 +21,7 @@ export class LocationWorkService {
   // Получить все места работы
   async findAll(): Promise<LocationWork[]> {
     return await this.locationWorkRepository.find({
-      order: { locationName: 'ASC' }
+      order: { locationId: 'ASC' }
     });
   }
 
