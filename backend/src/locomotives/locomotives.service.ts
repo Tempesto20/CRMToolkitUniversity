@@ -68,11 +68,16 @@ export class LocomotivesService {
   }
 
   // Получить все локомотивы
+
+
   async findAll(): Promise<Locomotive[]> {
-    return await this.locomotiveRepository.find({
-      relations: ['location', 'serviceType', 'workType'],
-      order: { locomotiveId: 'ASC' }
-    });
+    return await this.locomotiveRepository
+      .createQueryBuilder('locomotive')
+      .leftJoinAndSelect('locomotive.location', 'location')
+      .leftJoinAndSelect('locomotive.serviceType', 'serviceType')
+      .leftJoinAndSelect('locomotive.workType', 'workType')
+      .orderBy('CAST(locomotive.locomotiveId AS INTEGER)', 'ASC')
+      .getMany();
   }
 
   // Получить локомотив по ID

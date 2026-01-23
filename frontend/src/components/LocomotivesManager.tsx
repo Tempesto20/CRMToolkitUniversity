@@ -283,7 +283,7 @@ const LocomotivesManager: React.FC = () => {
             <span>🔧</span>
           </div>
           <div className={styles.statContent}>
-            <p className={styles.statLabel}>В ремонте</p>
+            <p className={styles.statLabel}>В депо</p>
             <p className={styles.statValue}>{stats?.nonOperational || 0}</p>
           </div>
         </div>
@@ -347,8 +347,8 @@ const LocomotivesManager: React.FC = () => {
                     <span className={`${styles.statusBadge} ${
                       locomotive.operationalStatus ? styles.success : styles.warning
                     }`}>
-                      {locomotive.operationalStatus ? 'Доступен' : 'В ремонте'}
-                      {locomotive.locomotiveDepo && ' (депо)'}
+                      {locomotive.operationalStatus ? 'В работе' : 'В депо'}
+                      {/* {locomotive.locomotiveDepo && ' В депо'} */}
                     </span>
                   </td>
                   <td className={styles.actionsCell}>
@@ -380,33 +380,20 @@ const LocomotivesManager: React.FC = () => {
         )}
       </div>
 
-      {/* Доступные локомотивы */}
-      <div className={styles.availableLocomotives}>
-        <h3>
-          <span className={styles.iconSuccess}>✓</span>
-          Доступные локомотивы ({availableLocomotives.length})
-        </h3>
-        <div className={styles.availableList}>
-          {availableLocomotives.map((locomotive: any) => (
-            <span key={locomotive.locomotiveId} className={styles.availableTag}>
-              {locomotive.locomotiveId} ({locomotive.locomotiveType || 'неизвестно'})
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Диалог добавления/редактирования */}
+      {/* Модальное окно добавления/редактирования */}
       {openDialog && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
+          <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
-              <h3>{selectedLocomotive ? 'Редактирование локомотива' : 'Добавление локомотива'}</h3>
-              <button onClick={handleCloseDialog} className={styles.btnClose}>×</button>
+              <h2>{selectedLocomotive ? 'Редактирование локомотива' : 'Добавление локомотива'}</h2>
+              <button onClick={handleCloseDialog} className={styles.closeButton}>×</button>
             </div>
-            <div className={styles.modalBody}>
+            
+            <div className={styles.form}>
               <div className={styles.formGrid}>
+                {/* ID локомотива */}
                 <div className={styles.formGroup}>
-                  <label>ID локомотива *</label>
+                  <label>ID локомотива: *</label>
                   <input
                     type="text"
                     name="locomotiveId"
@@ -414,58 +401,50 @@ const LocomotivesManager: React.FC = () => {
                     onChange={handleInputChange}
                     required
                     disabled={!!selectedLocomotive}
+                    className={selectedLocomotive ? styles.disabledInput : styles.input}
+                    placeholder="Введите ID локомотива"
                   />
+                  {selectedLocomotive && (
+                    <small className={styles.helperText}>ID локомотива нельзя изменить</small>
+                  )}
                 </div>
+                
+                {/* Тип локомотива */}
                 <div className={styles.formGroup}>
-                  <label>Тип локомотива</label>
+                  <label>Тип локомотива:</label>
                   <input
                     type="text"
                     name="locomotiveType"
                     value={formData.locomotiveType}
                     onChange={handleInputChange}
+                    className={styles.input}
                     placeholder="электровоз, тепловоз и т.д."
                   />
                 </div>
+                
+                {/* Название */}
                 <div className={styles.formGroup}>
-                  <label>Название</label>
+                  <label>Название:</label>
                   <input
                     type="text"
                     name="locomotiveName"
                     value={formData.locomotiveName}
                     onChange={handleInputChange}
+                    className={styles.input}
                     placeholder="Название локомотива"
                   />
                 </div>
+                
+                {/* Вид службы */}
                 <div className={styles.formGroup}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      name="locomotiveDepo"
-                      checked={formData.locomotiveDepo}
-                      onChange={handleInputChange}
-                    />
-                    В депо
-                  </label>
-                </div>
-                <div className={styles.formGroup}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      name="operationalStatus"
-                      checked={formData.operationalStatus}
-                      onChange={handleInputChange}
-                    />
-                    Рабочий статус
-                  </label>
-                </div>
-                <div className={styles.formGroup}>
-                  <label>вид службы</label>
+                  <label>Вид службы:</label>
                   <select
                     name="serviceTypeId"
                     value={formData.serviceTypeId}
                     onChange={handleInputChange}
+                    className={styles.select}
                   >
-                    <option value="">Выберите вид службы</option>
+                    <option value="">-- Выберите вид службы --</option>
                     {serviceTypes.map((serviceType: any) => (
                       <option key={serviceType.serviceTypeId} value={serviceType.serviceTypeId}>
                         {serviceType.serviceTypeName}
@@ -473,14 +452,17 @@ const LocomotivesManager: React.FC = () => {
                     ))}
                   </select>
                 </div>
+                
+                {/* Вид работ */}
                 <div className={styles.formGroup}>
-                  <label>Вид работ</label>
+                  <label>Вид работ:</label>
                   <select
                     name="workTypeId"
                     value={formData.workTypeId}
                     onChange={handleInputChange}
+                    className={styles.select}
                   >
-                    <option value="">Выберите вид работ</option>
+                    <option value="">-- Выберите вид работ --</option>
                     {workTypes.map((workType: any) => (
                       <option key={workType.workTypeId} value={workType.workTypeId}>
                         {workType.workTypeName}
@@ -488,14 +470,17 @@ const LocomotivesManager: React.FC = () => {
                     ))}
                   </select>
                 </div>
+                
+                {/* Место работы */}
                 <div className={styles.formGroup}>
-                  <label>Место работы</label>
+                  <label>Место работы:</label>
                   <select
                     name="locationId"
                     value={formData.locationId}
                     onChange={handleInputChange}
+                    className={styles.select}
                   >
-                    <option value="">Выберите место работы</option>
+                    <option value="">-- Выберите место работы --</option>
                     {locations.map((location: any) => (
                       <option key={location.locationId} value={location.locationId}>
                         {location.locationName}
@@ -504,41 +489,94 @@ const LocomotivesManager: React.FC = () => {
                   </select>
                 </div>
               </div>
-            </div>
-            <div className={styles.modalFooter}>
-              <button onClick={handleCloseDialog} className={`${styles.btn} ${styles.btnSecondary}`}>
-                Отмена
-              </button>
-              <button onClick={handleSubmit} className={`${styles.btn} ${styles.btnPrimary}`}>
-                {selectedLocomotive ? 'Сохранить' : 'Добавить'}
-              </button>
+              
+              {/* Чекбоксы */}
+              <div className={styles.checkboxSection}>
+                <h3>Статусы:</h3>
+                <div className={styles.checkboxGroup}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      name="locomotiveDepo"
+                      checked={formData.locomotiveDepo}
+                      onChange={handleInputChange}
+                      className={styles.checkbox}
+                    />
+                    В депо
+                  </label>
+                  
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      name="operationalStatus"
+                      checked={formData.operationalStatus}
+                      onChange={handleInputChange}
+                      className={styles.checkbox}
+                    />
+                    Рабочий статус
+                  </label>
+                </div>
+              </div>
+              
+              {/* Кнопки */}
+              <div className={styles.formActions}>
+                <button
+                  type="button"
+                  onClick={handleCloseDialog}
+                  className={styles.cancelButton}
+                >
+                  Отмена
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className={styles.submitButton}
+                >
+                  {selectedLocomotive ? 'Сохранить изменения' : 'Добавить локомотив'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Диалог подтверждения удаления */}
+      {/* Модальное окно подтверждения удаления */}
       {openDeleteDialog && (
         <div className={styles.modalOverlay}>
-          <div className={`${styles.modal} ${styles.modalSm}`}>
+          <div className={`${styles.modalContent} ${styles.modalSm}`}>
             <div className={styles.modalHeader}>
-              <h3>Подтверждение удаления</h3>
-              <button onClick={handleCloseDeleteDialog} className={styles.btnClose}>×</button>
+              <h2>Подтверждение удаления</h2>
+              <button onClick={handleCloseDeleteDialog} className={styles.closeButton}>×</button>
             </div>
-            <div className={styles.modalBody}>
-              <p>Вы уверены, что хотите удалить выбранный локомотив? Это действие нельзя отменить.</p>
-            </div>
-            <div className={styles.modalFooter}>
-              <button onClick={handleCloseDeleteDialog} className={`${styles.btn} ${styles.btnSecondary}`}>
-                Отмена
-              </button>
-              <button 
-                onClick={handleDelete} 
-                className={`${styles.btn} ${styles.btnDanger}`}
-                disabled={deleteStatus === 'loading'}
-              >
-                {deleteStatus === 'loading' ? 'Удаление...' : 'Удалить'}
-              </button>
+            
+            <div className={styles.form}>
+              <div className={styles.deleteConfirm}>
+                <div className={styles.deleteIcon}>
+                  <span>⚠️</span>
+                </div>
+                <div className={styles.deleteMessage}>
+                  <h3>Вы уверены, что хотите удалить локомотив?</h3>
+                  <p>Это действие нельзя отменить. Все связанные данные будут также удалены.</p>
+                </div>
+              </div>
+              
+              <div className={styles.formActions}>
+                <button
+                  type="button"
+                  onClick={handleCloseDeleteDialog}
+                  className={styles.cancelButton}
+                >
+                  Отмена
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className={styles.deleteConfirmButton}
+                  disabled={deleteStatus === 'loading'}
+                >
+                  {deleteStatus === 'loading' ? 'Удаление...' : 'Удалить'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
