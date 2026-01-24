@@ -82,64 +82,18 @@
 
 
 
-// import { configureStore } from '@reduxjs/toolkit';
-// import employeesReducer from './slices/employeesSlice';
-// import brigadaReducer from './slices/brigadaSlice';
-
-// import leavesReducer from './slices/leavesSlice';
-
-// import leaveTypesReducer from './slices/leaveTypesSlice';
-
-// import locationWorkReducer from './slices/locationWorkSlice';
-
-// import locomotivesReducer from './slices/locomotivesSlice';
-
-// import serviceTypesReducer from './slices/serviceTypesSlice';
-
-// import workTypes from './slices/workTypesSlice';
-
-// export const store = configureStore({
-//   reducer: {
-//     employees: employeesReducer,
-//     brigada: brigadaReducer,
-//     leaves:leavesReducer,
-//     leaveTypes:leaveTypesReducer,
-//     locationWor:locationWorkReducer,          
-//     locomotives:locomotivesReducer,
-//     serviceTypes:serviceTypesReducer,
-//     workTypes:workTypes,
-//   },
-// });
-
-// export type RootState = ReturnType<typeof store.getState>;
-// export type AppDispatch = typeof store.dispatch;
-
-
-
-
-
-
-
 import { configureStore } from '@reduxjs/toolkit';
 import employeesReducer from './slices/employeesSlice';
-import brigadaReducer from './slices/brigadaSlice';
-import serviceTypesReducer from './slices/serviceTypesSlice';
-import workTypesReducer from './slices/workTypesSlice';
 import locomotivesReducer from './slices/locomotivesSlice';
 import locationWorkReducer from './slices/locationWorkSlice';
-import leaveTypesReducer from './slices/leaveTypesSlice';
 import leavesReducer from './slices/leavesSlice';
 import dispatchPlanReducer from './slices/dispatchPlanSlice';
 
 export const store = configureStore({
   reducer: {
     employees: employeesReducer,
-    brigada: brigadaReducer,
-    serviceTypes: serviceTypesReducer,
-    workTypes: workTypesReducer,
     locomotives: locomotivesReducer,
     locationWork: locationWorkReducer,
-    leaveTypes: leaveTypesReducer,
     leaves: leavesReducer,
     dispatchPlan: dispatchPlanReducer,
   },

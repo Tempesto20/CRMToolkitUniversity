@@ -513,7 +513,7 @@ const LocomotivesManager: React.FC = () => {
                       onChange={handleInputChange}
                       className={styles.checkbox}
                     />
-                    Рабочий статус
+                    На линии
                   </label>
                 </div>
               </div>

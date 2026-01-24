@@ -1,4 +1,3 @@
-// src/redux/slices/leavesSlice.ts
 import axios from 'axios';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
@@ -116,11 +115,27 @@ const transformApiLeaveType = (apiType: ApiLeaveType) => ({
   description: apiType.description
 });
 
-const transformApiEmployee = (apiEmployee: ApiEmployee) => ({
+// const transformApiEmployee = (apiEmployee: ApiEmployee) => ({
+//   personalNumber: apiEmployee.personalNumber,
+//   fullName: apiEmployee.fullName,
+//   position: apiEmployee.position
+// });
+
+
+
+export interface Employee {
+  personalNumber: number;
+  fullName: string;
+  position?: string;
+}
+
+// Обновленный вариант transformApiEmployee чтобы использовать экспортируемый интерфейс
+const transformApiEmployee = (apiEmployee: ApiEmployee): Employee => ({
   personalNumber: apiEmployee.personalNumber,
   fullName: apiEmployee.fullName,
   position: apiEmployee.position
 });
+
 
 // Создаем экземпляр axios с базовым URL
 const api = axios.create({
@@ -308,7 +323,9 @@ export const deleteLeave = createAsyncThunk(
   'leaves/deleteLeaveStatus',
   async (id: number) => {
     try {
+      console.log('Deleting leave with ID:', id);
       await api.delete(`/leaves/${id}`);
+      console.log('Successfully deleted leave:', id);
       return id;
     } catch (error: any) {
       console.error('Error deleting leave:', error);

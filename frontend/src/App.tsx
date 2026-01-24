@@ -8,7 +8,7 @@ import EmployeesManager from './components/Employees/EmployeesManager';
 import LocomotivesManager from './components/Locomotives/LocomotivesManager';
 import LeavesManager from './components/Leaves/LeavesManager';
 import LocationWorkManager from './components/Locations/LocationWorkManager';
-import DispatchPlan from './components/DispatchPlan';
+import DispatchPlan from './components/DispatchPlan/DispatchPlan';
 
 function App() {
   return (

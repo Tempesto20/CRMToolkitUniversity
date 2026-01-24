@@ -5,8 +5,8 @@ import {
   fetchFilterData, 
   setFilters,
   resetFilters 
-} from '../redux/slices/dispatchPlanSlice';
-import { RootState, AppDispatch } from '../redux/store';
+} from '../../redux/slices/dispatchPlanSlice';
+import { RootState, AppDispatch } from '../../redux/store';
 import styles from './DispatchPlan.module.scss';
 
 const DispatchPlan: React.FC = () => {

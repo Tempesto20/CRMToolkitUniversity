@@ -13,11 +13,6 @@
     transform: translateY(-4px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
   }
-  
-  &.onLeaveCard {
-    border-left: 4px solid #fa8c16;
-    opacity: 0.9;
-  }
 }
 
 // Бейджи
@@ -25,14 +20,25 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  z-index: 2;
+  z-index: 10;
 }
 
 .exactMatchBadge {
   position: absolute;
   top: 10px;
   left: 10px;
-  z-index: 2;
+  z-index: 10;
+}
+
+.upcomingLeaveBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  
+  &.withExactMatch {
+    top: 40px;
+  }
 }
 
 // Фото сотрудника
@@ -209,17 +215,6 @@
   font-weight: 600;
 }
 
-.leaveDetails {
-  p {
-    margin: 4px 0;
-    font-size: 13px;
-    
-    strong {
-      color: #d46b08;
-    }
-  }
-}
-
 .leaveDetail {
   margin: 4px 0;
   font-size: 13px;
@@ -277,17 +272,6 @@
   }
 }
 
-
-
-
-// Добавьте эти стили в существующий файл
-.upcomingLeaveBadge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
-}
-
 .statusContainer {
   display: flex;
   gap: 8px;
@@ -312,9 +296,7 @@
     color: #722ed1;
     margin-bottom: 8px;
   }
-}
-
-.leaveDetails {
+  
   .leaveDetail {
     margin: 4px 0;
     
@@ -329,9 +311,10 @@
 .onLeaveCard {
   border-left: 4px solid #fa8c16;
   background-color: #fff7e6;
+  opacity: 0.9;
 }
 
-// Стиль для карточки с предстоящим отпуском
+// Глобальные стили для тегов
 :global {
   .ant-tag-purple {
     background-color: #f9f0ff;
@@ -339,8 +322,6 @@
     color: #722ed1;
   }
 }
-
-
 
 // Адаптивность
 @media (max-width: 768px) {

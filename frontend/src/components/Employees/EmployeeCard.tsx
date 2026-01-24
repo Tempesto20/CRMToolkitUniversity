@@ -272,13 +272,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
                 Работает
               </Tag>
             )}
-            
-            {/* Статистика отпусков */}
-            {leaveStats.total > 0 && (
-              <Tag color="blue" className={styles.leaveStatsTag}>
-                Отпусков: {leaveStats.total} ({leaveStats.currentYear} в этом году)
-              </Tag>
-            )}
+          
           </div>
         </div>
         

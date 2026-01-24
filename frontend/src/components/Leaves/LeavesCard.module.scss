@@ -1,0 +1,226 @@
+.leavesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leaveCard {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-color: #1890ff;
+  }
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.employeeInfo {
+  flex: 1;
+}
+
+.employeeName {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.employeeNumber {
+  font-size: 14px;
+  color: #8c8c8c;
+  font-weight: 500;
+}
+
+.statusBadge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  
+  &.active {
+    background: #f6ffed;
+    color: #52c41a;
+    border: 1px solid #b7eb8f;
+  }
+  
+  &.completed {
+    background: #fff7e6;
+    color: #fa8c16;
+    border: 1px solid #ffd591;
+  }
+}
+
+.cardBody {
+  margin-bottom: 20px;
+}
+
+.infoRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.infoLabel {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-bottom: 4px;
+}
+
+.infoValue {
+  font-size: 14px;
+  font-weight: 500;
+  color: #262626;
+  word-break: break-word;
+}
+
+.cardActions {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+}
+
+.actionButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.editButton {
+  background: #e6f7ff;
+  color: #1890ff;
+  
+  &:hover {
+    background: #bae7ff;
+  }
+}
+
+.deleteButton {
+  background: #fff2f0;
+  color: #ff4d4f;
+  
+  &:hover {
+    background: #ffccc7;
+  }
+}
+
+.buttonIcon {
+  font-size: 16px;
+}
+
+.buttonText {
+  @media (max-width: 480px) {
+    display: none;
+  }
+}
+
+/* Состояние при отсутствии данных */
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  p {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+  }
+  
+  button {
+    margin-top: 16px;
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .leavesGrid {
+    gap: 16px;
+  }
+  
+  .leaveCard {
+    padding: 16px;
+  }
+  
+  .employeeName {
+    font-size: 16px;
+  }
+  
+  .infoRow {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardActions {
+    gap: 8px;
+  }
+  
+  .actionButton {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .buttonIcon {
+    font-size: 14px;
+  }
+}
