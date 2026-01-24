@@ -1,0 +1,36 @@
+.statusBadge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.success {
+    background: #f6ffed;
+    color: #52c41a;
+  }
+
+  &.warning {
+    background: #fff7e6;
+    color: #fa8c16;
+  }
+}
+
+.actionsCell {
+  white-space: nowrap;
+}
+
+.btnIcon {
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.btnEdit:hover {
+  color: #1890ff;
+}
+
+.btnDelete:hover {
+  color: #ff4d4f;
+}

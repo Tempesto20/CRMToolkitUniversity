@@ -44,7 +44,7 @@ const LeavesManager: React.FC = () => {
 
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // <-- ДОБАВЛЕНО
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
   const [formData, setFormData] = useState<FormData>({
     employeePersonalNumber: '',
@@ -52,8 +52,8 @@ const LeavesManager: React.FC = () => {
     startDate: '',
     endDate: ''
   });
-  const [leaveToDelete, setLeaveToDelete] = useState<number | null>(null); // <-- ДОБАВЛЕНО
-  const [deleteEmployeeName, setDeleteEmployeeName] = useState<string>(''); // <-- ДОБАВЛЕНО
+  const [leaveToDelete, setLeaveToDelete] = useState<number | null>(null);
+  const [deleteEmployeeName, setDeleteEmployeeName] = useState<string>('');
 
   useEffect(() => {
     dispatch(fetchLeaves(searchQuery));
@@ -97,14 +97,12 @@ const LeavesManager: React.FC = () => {
     setSelectedLeave(null);
   };
 
-  // ДОБАВЛЕНО: Функция открытия модального окна удаления
   const handleOpenDeleteDialog = (leaveId: number, employeeName: string) => {
     setLeaveToDelete(leaveId);
     setDeleteEmployeeName(employeeName);
-    setOpenDeleteDialog(true); // <-- ВАЖНО: Устанавливаем true
+    setOpenDeleteDialog(true);
   };
 
-  // ДОБАВЛЕНО: Функция закрытия модального окна удаления
   const handleCloseDeleteDialog = () => {
     setOpenDeleteDialog(false);
     setLeaveToDelete(null);
@@ -152,11 +150,9 @@ const LeavesManager: React.FC = () => {
     });
   };
 
-  // ДОБАВЛЕНО: Функция удаления
   const handleDelete = () => {
     if (leaveToDelete !== null) {
       dispatch(deleteLeave(leaveToDelete)).then(() => {
-        // После успешного удаления обновляем данные
         dispatch(fetchLeaves(searchQuery));
         dispatch(fetchLeaveStats());
         handleCloseDeleteDialog();
@@ -276,8 +272,7 @@ const LeavesManager: React.FC = () => {
 
       {/* Поиск */}
       <div className={styles.searchSection}>
-        <h2>Поиск сотрудников</h2>
-        <div className={styles.searchControl}>
+        <div className={styles.searchInputContainer}>
           <input
             type="text"
             placeholder="Поиск по ФИО или табельному номеру..."
@@ -294,6 +289,33 @@ const LeavesManager: React.FC = () => {
               ×
             </button>
           )}
+          {searchQuery && (
+            <div className={styles.searchInfo}>
+              <span className={styles.searchInfoText}>
+                {leaves.length > 0 
+                  ? `Найдено отпусков: ${leaves.length}` 
+                  : 'Ничего не найдено'}
+              </span>
+            </div>
+          )}
+        </div>
+        
+        <div className={styles.searchStats}>
+          <span className={styles.statLabel}>Всего отпусков:</span>
+          <span className={styles.statValue}>{stats?.total || 0}</span>
+          
+          {stats && (
+            <>
+              <span className={styles.statLabel}>В отпуске:</span>
+              <span className={`${styles.statValue} ${styles.onLeave}`}>
+                {stats.active || 0}
+              </span>
+              <span className={styles.statLabel}>Завершены:</span>
+              <span className={styles.statValue}>
+                {stats.completed || 0}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -301,7 +323,7 @@ const LeavesManager: React.FC = () => {
       <LeavesCard
         leaves={leaves.filter(leave => leave.employee && leave.leaveType)}
         onEdit={handleOpenEditDialog}
-        onDelete={handleOpenDeleteDialog} 
+        onDelete={handleOpenDeleteDialog}
       />
 
       {/* Сообщение если нет данных */}
@@ -338,7 +360,7 @@ const LeavesManager: React.FC = () => {
         calculateDays={calculateDays}
       />
 
-      {/* Модальное окно подтверждения удаления - ДОБАВЛЕНО */}
+      {/* Модальное окно подтверждения удаления */}
       {openDeleteDialog && (
         <div className={styles.modalOverlay}>
           <div className={`${styles.modalContent} ${styles.modalSm}`}>

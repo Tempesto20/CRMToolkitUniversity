@@ -121,35 +121,34 @@
 
 /* Поиск */
 .searchSection {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
   margin-bottom: 24px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-  h2 {
-    margin: 0 0 16px 0;
-    font-size: 18px;
-    font-weight: 600;
-  }
 }
 
-.searchControl {
+.searchInputContainer {
   position: relative;
-  width: 100%;
+  margin-bottom: 16px;
 }
 
 .searchInput {
-  width: 100%;
+  width: 90%;
   padding: 10px 40px 10px 16px;
   border: 1px solid #d9d9d9;
   border-radius: 4px;
   font-size: 14px;
+  transition: all 0.3s;
 
   &:focus {
     outline: none;
     border-color: #40a9ff;
     box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  }
+
+  &::placeholder {
+    color: #999;
   }
 }
 
@@ -163,10 +162,62 @@
   font-size: 20px;
   color: #999;
   cursor: pointer;
-  
+  padding: 4px;
+  line-height: 1;
+  transition: color 0.2s;
+
   &:hover {
     color: #666;
   }
+}
+
+.searchInfo {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.searchInfoText {
+  font-size: 12px;
+  color: #52c41a;
+  background: rgba(82, 196, 26, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.searchStats {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  
+  .onLeave {
+    color: #fa8c16;
+    font-weight: bold;
+  }
+  
+  .working {
+    color: #52c41a;
+    font-weight: bold;
+  }
+}
+
+.statLabel {
+  color: #666;
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+.statValue {
+  font-weight: bold;
+  color: #1890ff;
+  font-size: 16px;
+  margin-right: 5px;
 }
 
 /* Состояния загрузки и ошибок */
@@ -273,6 +324,7 @@
     opacity: 1;
   }
 }
+
 /* Модальные окна */
 .modalOverlay {
   position: fixed;
@@ -483,6 +535,7 @@
     box-shadow: none;
   }
 }
+
 /* Адаптивность */
 @media (max-width: 768px) {
   .pageHeader {
@@ -503,6 +556,11 @@
 
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .searchStats {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
 

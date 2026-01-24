@@ -16,6 +16,9 @@ import {
   resetDeleteStatus
 } from '../../redux/slices/locomotivesSlice';
 import { RootState, AppDispatch } from '../../redux/store';
+import LocomotivesCard from './LocomotivesCard';
+import AddLocomotivesModal from './modals/AddLocomotivesModal';
+import EditLocomotivesModal from './modals/EditLocomotivesModal';
 import styles from './LocomotivesManager.module.scss';
 
 interface FormData {
@@ -336,38 +339,15 @@ const LocomotivesManager: React.FC = () => {
             </thead>
             <tbody>
               {displayLocomotives.map((locomotive: any) => (
-                <tr key={locomotive.locomotiveId}>
-                  <td>{locomotive.locomotiveId}</td>
-                  <td>{locomotive.locomotiveType || 'Не указан'}</td>
-                  <td>{locomotive.locomotiveName}</td>
-                  <td>{getServiceTypeName(locomotive)}</td>
-                  <td>{getWorkTypeName(locomotive)}</td>
-                  <td>{getLocationName(locomotive)}</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${
-                      locomotive.operationalStatus ? styles.success : styles.warning
-                    }`}>
-                      {locomotive.operationalStatus ? 'На линии' : 'В депо'}
-                      {/* {locomotive.locomotiveDepo && ' В депо'} */}
-                    </span>
-                  </td>
-                  <td className={styles.actionsCell}>
-                    <button
-                      onClick={() => handleOpenDialog(locomotive)}
-                      className={`${styles.btnIcon} ${styles.btnEdit}`}
-                      title="Редактировать"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => handleOpenDeleteDialog(locomotive.locomotiveId, locomotive.locomotiveName)}
-                      className={`${styles.btnIcon} ${styles.btnDelete}`}
-                      title="Удалить"
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
+                <LocomotivesCard
+                  key={locomotive.locomotiveId}
+                  locomotive={locomotive}
+                  onEdit={handleOpenDialog}
+                  onDelete={handleOpenDeleteDialog}
+                  getServiceTypeName={getServiceTypeName}
+                  getWorkTypeName={getWorkTypeName}
+                  getLocationName={getLocationName}
+                />
               ))}
             </tbody>
           </table>
@@ -380,164 +360,33 @@ const LocomotivesManager: React.FC = () => {
         )}
       </div>
 
-      {/* Модальное окно добавления/редактирования */}
-      {openDialog && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <div className={styles.modalHeader}>
-              <h2>{selectedLocomotive ? 'Редактирование локомотива' : 'Добавление локомотива'}</h2>
-              <button onClick={handleCloseDialog} className={styles.closeButton}>×</button>
-            </div>
-            
-            <div className={styles.form}>
-              <div className={styles.formGrid}>
-                {/* ID локомотива */}
-                <div className={styles.formGroup}>
-                  <label>ID локомотива: *</label>
-                  <input
-                    type="text"
-                    name="locomotiveId"
-                    value={formData.locomotiveId}
-                    onChange={handleInputChange}
-                    required
-                    disabled={!!selectedLocomotive}
-                    className={selectedLocomotive ? styles.disabledInput : styles.input}
-                    placeholder="Введите ID локомотива"
-                  />
-                  {selectedLocomotive && (
-                    <small className={styles.helperText}>ID локомотива нельзя изменить</small>
-                  )}
-                </div>
-                
-                {/* Тип локомотива */}
-                <div className={styles.formGroup}>
-                  <label>Тип локомотива:</label>
-                  <input
-                    type="text"
-                    name="locomotiveType"
-                    value={formData.locomotiveType}
-                    onChange={handleInputChange}
-                    className={styles.input}
-                    placeholder="электровоз, тепловоз и т.д."
-                  />
-                </div>
-                
-                {/* Название */}
-                <div className={styles.formGroup}>
-                  <label>Название:</label>
-                  <input
-                    type="text"
-                    name="locomotiveName"
-                    value={formData.locomotiveName}
-                    onChange={handleInputChange}
-                    className={styles.input}
-                    placeholder="Название локомотива"
-                  />
-                </div>
-                
-                {/* Вид службы */}
-                <div className={styles.formGroup}>
-                  <label>Вид службы:</label>
-                  <select
-                    name="serviceTypeId"
-                    value={formData.serviceTypeId}
-                    onChange={handleInputChange}
-                    className={styles.select}
-                  >
-                    <option value="">-- Выберите вид службы --</option>
-                    {serviceTypes.map((serviceType: any) => (
-                      <option key={serviceType.serviceTypeId} value={serviceType.serviceTypeId}>
-                        {serviceType.serviceTypeName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                {/* Вид работ */}
-                <div className={styles.formGroup}>
-                  <label>Вид работ:</label>
-                  <select
-                    name="workTypeId"
-                    value={formData.workTypeId}
-                    onChange={handleInputChange}
-                    className={styles.select}
-                  >
-                    <option value="">-- Выберите вид работ --</option>
-                    {workTypes.map((workType: any) => (
-                      <option key={workType.workTypeId} value={workType.workTypeId}>
-                        {workType.workTypeName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                {/* Место работы */}
-                <div className={styles.formGroup}>
-                  <label>Место работы:</label>
-                  <select
-                    name="locationId"
-                    value={formData.locationId}
-                    onChange={handleInputChange}
-                    className={styles.select}
-                  >
-                    <option value="">-- Выберите место работы --</option>
-                    {locations.map((location: any) => (
-                      <option key={location.locationId} value={location.locationId}>
-                        {location.locationName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              {/* Чекбоксы */}
-              <div className={styles.checkboxSection}>
-                <h3>Статусы:</h3>
-                <div className={styles.checkboxGroup}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      name="locomotiveDepo"
-                      checked={formData.locomotiveDepo}
-                      onChange={handleInputChange}
-                      className={styles.checkbox}
-                    />
-                    В депо
-                  </label>
-                  
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      name="operationalStatus"
-                      checked={formData.operationalStatus}
-                      onChange={handleInputChange}
-                      className={styles.checkbox}
-                    />
-                    На линии
-                  </label>
-                </div>
-              </div>
-              
-              {/* Кнопки */}
-              <div className={styles.formActions}>
-                <button
-                  type="button"
-                  onClick={handleCloseDialog}
-                  className={styles.cancelButton}
-                >
-                  Отмена
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  className={styles.submitButton}
-                >
-                  {selectedLocomotive ? 'Сохранить изменения' : 'Добавить локомотив'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Модальное окно добавления */}
+      {!selectedLocomotive && (
+        <AddLocomotivesModal
+          open={openDialog && !selectedLocomotive}
+          onClose={handleCloseDialog}
+          onSubmit={handleSubmit}
+          formData={formData}
+          onInputChange={handleInputChange}
+          serviceTypes={serviceTypes}
+          workTypes={workTypes}
+          locations={locations}
+        />
+      )}
+
+      {/* Модальное окно редактирования */}
+      {selectedLocomotive && (
+        <EditLocomotivesModal
+          open={openDialog && !!selectedLocomotive}
+          onClose={handleCloseDialog}
+          onSubmit={handleSubmit}
+          formData={formData}
+          onInputChange={handleInputChange}
+          serviceTypes={serviceTypes}
+          workTypes={workTypes}
+          locations={locations}
+          selectedLocomotive={selectedLocomotive}
+        />
       )}
 
       {/* Модальное окно подтверждения удаления */}
