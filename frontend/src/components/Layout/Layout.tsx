@@ -15,9 +15,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </main>
       <footer className={styles.footer}>
         <div className={styles.footerContent}>
-          <p>© {new Date().getFullYear()} Локомотивное депо. Все права защищены.</p>
+          <p>© {new Date().getFullYear()} Курсовая работа Суткового Алексея Максимович</p>
           <p className={styles.footerSubtext}>
-            Система управления персоналом и производственными процессами
+            Разработка информационной системы по управлению персоналом
           </p>
         </div>
       </footer>

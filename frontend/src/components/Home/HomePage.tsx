@@ -17,7 +17,7 @@ const HomePage: React.FC = () => {
           <div className={styles.featureIcon}>👥</div>
           <h3>Управление персоналом</h3>
           <p>Добавление, редактирование и отслеживание информации о сотрудниках</p>
-          <Link to="/add-employee" className={styles.featureLink}>
+          <Link to="/employees" className={styles.featureLink}>
             Добавить сотрудника →
           </Link>
         </div>
@@ -43,31 +43,17 @@ const HomePage: React.FC = () => {
         <div className={styles.featureCard}>
           <div className={styles.featureIcon}>🏭</div>
           <h3>Производственные ресурсы</h3>
-          <p>Управление местами работы, службами и видами работ</p>
-          <Link to="/work-types" className={styles.featureLink}>
+          <p>Управление местами работы</p>
+          <Link to="/location-works" className={styles.featureLink}>
             Смотреть ресурсы →
           </Link>
         </div>
-      </div>
-
-      <div className={styles.statsSection}>
-        <h2>Быстрый доступ</h2>
-        <div className={styles.quickLinks}>
-          <Link to="/add-employee" className={styles.quickLink}>
-            <span className={styles.quickIcon}>➕</span>
-            Добавить сотрудника
-          </Link>
-          <Link to="/locomotives" className={styles.quickLink}>
-            <span className={styles.quickIcon}>🚂</span>
-            Локомотивы
-          </Link>
-          <Link to="/leaves" className={styles.quickLink}>
-            <span className={styles.quickIcon}>📅</span>
-            Отпуска
-          </Link>
-          <Link to="/employees" className={styles.quickLink}>
-            <span className={styles.quickIcon}>👥</span>
-            Все сотрудники
+                <div className={styles.featureCard}>
+          <div className={styles.featureIcon}>➕</div>
+          <h3>Схема раскреплений сотрудников</h3>
+          <p>Просмотр на каком локомотиве, какой сотрудник закреплен</p>
+          <Link to="/dispatch-plan" className={styles.featureLink}>
+            Смотреть ресурсы →
           </Link>
         </div>
       </div>

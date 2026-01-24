@@ -1,3 +1,4 @@
+// Header.module.scss
 .header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -148,6 +149,10 @@
     }
   }
   
+
+
+
+
   @media (min-width: 769px) {
     .navList {
       flex-wrap: wrap;

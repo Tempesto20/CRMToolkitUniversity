@@ -22,7 +22,7 @@ const Header: React.FC = () => {
         <div className={styles.logo}>
           <Link to="/">
             <span className={styles.logoIcon}>🚂</span>
-            <span className={styles.logoText}>Локомотивное депо</span>
+            <span className={styles.logoText}>CRM - Локомотивный</span>
           </Link>
         </div>
 
