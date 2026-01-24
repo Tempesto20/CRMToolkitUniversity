@@ -1,3 +1,4 @@
+// backend/src/leaves/leaves.controller.ts
 import { 
   Controller, 
   Get, 
@@ -7,8 +8,7 @@ import {
   Body, 
   Param,
   ParseIntPipe,
-  Query,
-  ParseDatePipe
+  Query
 } from '@nestjs/common';
 import { LeavesService } from './leaves.service';
 import { Leave } from './leaves.entity';
@@ -25,7 +25,10 @@ export class LeavesController {
   }
 
   @Get()
-  async findAll(): Promise<Leave[]> {
+  async findAll(@Query('search') search?: string): Promise<Leave[]> {
+    if (search) {
+      return this.leavesService.searchLeaves(search);
+    }
     return this.leavesService.findAll();
   }
 
@@ -67,13 +70,16 @@ export class LeavesController {
     return this.leavesService.findOne(id);
   }
 
-  @Put(':id')
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateLeaveDto: UpdateLeaveDto
-  ): Promise<Leave> {
-    return this.leavesService.update(id, updateLeaveDto);
-  }
+@Put(':id')
+async update(
+  @Param('id', ParseIntPipe) id: number,
+  @Body() updateLeaveDto: UpdateLeaveDto
+): Promise<Leave> {
+  console.log(`Updating leave ${id} with data:`, updateLeaveDto);
+  const result = await this.leavesService.update(id, updateLeaveDto);
+  console.log('Updated leave:', result);
+  return result;
+}
 
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {

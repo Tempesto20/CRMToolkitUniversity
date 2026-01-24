@@ -1,316 +1,220 @@
-import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+// src/pages/LeavesManager/LeavesManager.tsx
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../../redux/store';
-import {
+import { 
   fetchLeaves,
+  fetchLeaveTypes,
+  fetchEmployees,
+  fetchLeaveStats,
+  createLeave,
+  updateLeave,
   deleteLeave,
   clearSuccessMessage,
   resetDeleteStatus,
-  createLeave,
-  updateLeave
+  setSearchQuery,
+  LeaveFormData,
+  Leave
 } from '../../redux/slices/leavesSlice';
-import { fetchAllEmployees } from '../../redux/slices/employeesSlice';
-import {
-  Modal,
-  Button,
-  message,
-  Input,
-  Spin,
-  Tag,
-  Row,
-  Col,
-  Select,
-  DatePicker
-} from 'antd';
-import {
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CalendarOutlined,
-  UserOutlined,
-  HomeOutlined,
-  PlusOutlined
-} from '@ant-design/icons';
-import dayjs from 'dayjs';
+import { RootState, AppDispatch } from '../../redux/store';
 import styles from './LeavesManager.module.scss';
-import LeaveCard from './LeaveCard';
-import AddLeaveModal from './modals/AddLeaveModal';
-import EditLeaveModal from './modals/EditLeaveModal';
 
-const { Search } = Input;
-const { Option } = Select;
-
-// Интерфейсы
-interface Leave {
-  leave_id: number;
-  employee_personal_number: number;
-  leave_type_id: number;
-  start_date: string;
-  end_date: string;
-  leave_type_name?: string;
-  employee_full_name?: string;
-  leave_type_description?: string;
-}
-
-interface LeaveType {
-  leave_type_id: number;
-  leave_type_name: string;
-  description: string;
-}
-
-interface Employee {
-  personalNumber: number;
-  fullName: string;
-  position?: string;
-  serviceType?: {
-    serviceTypeName: string;
-  };
-  brigada?: {
-    brigadaName: string;
-  };
+interface FormData {
+  leaveId?: number;
+  employeePersonalNumber: string;
+  leaveTypeId: string;
+  startDate: string;
+  endDate: string;
 }
 
 const LeavesManager: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const {
     leaves,
-    activeLeaves,
-    todayLeaves,
+    leaveTypes,
+    employees,
     stats,
     status,
+    deleteStatus,
     error,
+    successMessage,
+    searchQuery
   } = useSelector((state: RootState) => state.leaves);
 
-  const { employees } = useSelector((state: RootState) => state.employees);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
+  const [formData, setFormData] = useState<FormData>({
+    employeePersonalNumber: '',
+    leaveTypeId: '',
+    startDate: '',
+    endDate: ''
+  });
+  const [leaveToDelete, setLeaveToDelete] = useState<number | null>(null);
+  const [deleteEmployeeName, setDeleteEmployeeName] = useState<string>('');
 
-  const [searchInput, setSearchInput] = useState('');
-  const [deleteModal, setDeleteModal] = useState(false);
-  const [addModal, setAddModal] = useState(false);
-  const [editModal, setEditModal] = useState(false);
-  const [leaveToDelete, setLeaveToDelete] = useState<{ id: number; employeeName: string; leaveType: string } | null>(null);
-  const [editingLeave, setEditingLeave] = useState<Leave | null>(null);
-  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
-  const [loadingLeaveTypes, setLoadingLeaveTypes] = useState(false);
-  const [displayedLeaves, setDisplayedLeaves] = useState<Leave[]>([]);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'active' | 'today'>('all');
-  const [employeeFilter, setEmployeeFilter] = useState<number | null>(null);
-  const [leaveTypeFilter, setLeaveTypeFilter] = useState<number | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Загрузка данных
   useEffect(() => {
-    dispatch(fetchLeaves());
-    dispatch(fetchAllEmployees());
-    fetchLeaveTypes();
-  }, [dispatch]);
+    dispatch(fetchLeaves(searchQuery));
+    dispatch(fetchLeaveTypes());
+    dispatch(fetchEmployees(searchQuery));
+    dispatch(fetchLeaveStats());
+  }, [dispatch, searchQuery]);
 
-  // Эффект для постепенной загрузки отпусков
-  useEffect(() => {
-    if (leaves.length > 0 && !initialLoadComplete) {
-      setDisplayedLeaves(leaves);
-      setInitialLoadComplete(true);
-    }
-  }, [leaves, initialLoadComplete]);
-
-  // Функция для загрузки типов отпусков
-  const fetchLeaveTypes = async () => {
-    try {
-      setLoadingLeaveTypes(true);
-      const response = await fetch('http://localhost:3000/leave-types');
-      const data = await response.json();
-      setLeaveTypes(data);
-    } catch (err) {
-      console.error('Ошибка при загрузке типов отпусков:', err);
-      message.error('Не удалось загрузить типы отпусков');
-    } finally {
-      setLoadingLeaveTypes(false);
-    }
-  };
-
-  // Улучшенная функция для поиска отпусков
-  const searchLeaves = useCallback((query: string, leavesList: Leave[], employeesList: Employee[]) => {
-    if (!query.trim()) {
-      return {
-        exactMatches: [],
-        allMatches: leavesList,
-        topMatches: leavesList
-      };
-    }
-
-    const searchQuery = query.toLowerCase().trim();
-    const results = [];
-
-    for (const leave of leavesList) {
-      let isExactMatch = false;
-      let isMatch = false;
-
-      // Поиск по имени сотрудника
-      const employee = employeesList.find(emp => emp.personalNumber === leave.employee_personal_number);
-      const employeeName = employee?.fullName?.toLowerCase() || '';
-
-      if (employeeName === searchQuery) {
-        isExactMatch = true;
-        isMatch = true;
-      }
-
-      // Поиск по личному номеру
-      if (leave.employee_personal_number?.toString() === searchQuery) {
-        isExactMatch = true;
-        isMatch = true;
-      }
-
-      // Частичный поиск по имени
-      if (!isMatch && employeeName.includes(searchQuery)) {
-        isMatch = true;
-      }
-
-      // Поиск по типу отпуска
-      const leaveTypeName = leave.leave_type_name?.toLowerCase() || '';
-      if (!isMatch && leaveTypeName.includes(searchQuery)) {
-        isMatch = true;
-      }
-
-      if (isMatch) {
-        results.push({
-          ...leave,
-          isExactMatch,
-          priority: isExactMatch ? 2 : (employeeName.includes(searchQuery) ? 1 : 0)
-        });
-      }
-    }
-
-    // Сортировка
-    results.sort((a, b) => {
-      if (a.isExactMatch && !b.isExactMatch) return -1;
-      if (!a.isExactMatch && b.isExactMatch) return 1;
-      return b.priority - a.priority;
-    });
-
-    const exactMatches = results.filter(leave => leave.isExactMatch);
-    const allMatches = results;
-    const topMatches = results.slice(0, 5);
-
-    return {
-      exactMatches,
-      allMatches,
-      topMatches
-    };
-  }, []);
-
-  // Мемоизированные результаты поиска
-  const searchResults = useMemo(() => {
-    return searchLeaves(searchInput, displayedLeaves, employees);
-  }, [searchInput, displayedLeaves, employees, searchLeaves]);
-
-  // Обработка сообщений об ошибках
-  useEffect(() => {
-    if (error) {
-      message.error(error);
-    }
-  }, [error]);
-
-  // Обновление поискового инпута
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(e.target.value);
+    dispatch(setSearchQuery(e.target.value));
   };
 
-  // Быстрый поиск при нажатии Enter
-  const handleSearch = (value: string) => {
-    setSearchInput(value.trim());
-  };
-
-  const handleDeleteClick = useCallback((leaveId: number, employeeName: string, leaveType: string) => {
-    setLeaveToDelete({ id: leaveId, employeeName, leaveType });
-    setDeleteModal(true);
-  }, []);
-
-  const handleDeleteConfirm = useCallback(() => {
-    if (leaveToDelete) {
-      dispatch(deleteLeave(leaveToDelete.id));
-      setDeleteModal(false);
-      setLeaveToDelete(null);
+  const handleOpenDialog = (leave?: Leave) => {
+    if (leave) {
+      setSelectedLeave(leave);
+      setFormData({
+        leaveId: leave.leaveId,
+        employeePersonalNumber: leave.employee.personalNumber.toString(),
+        leaveTypeId: leave.leaveType.leaveTypeId.toString(),
+        startDate: leave.startDate.split('T')[0],
+        endDate: leave.endDate.split('T')[0]
+      });
+    } else {
+      setSelectedLeave(null);
+      setFormData({
+        employeePersonalNumber: '',
+        leaveTypeId: '',
+        startDate: '',
+        endDate: ''
+      });
     }
-  }, [dispatch, leaveToDelete]);
-
-  const handleEditClick = useCallback((leave: Leave) => {
-    setEditingLeave(leave);
-    setEditModal(true);
-  }, []);
-
-  const handleAddLeave = () => {
-    setAddModal(true);
+    setOpenDialog(true);
   };
 
-  const handleCancelAdd = () => {
-    setAddModal(false);
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setSelectedLeave(null);
   };
 
-  const handleCancelEdit = () => {
-    setEditModal(false);
-    setEditingLeave(null);
-  };
-
-  // Функция для обновления списка отпусков
-  const refreshLeaves = () => {
-    dispatch(fetchLeaves());
-  };
-
-  // Функция для подсчета статистики
-  const getStats = () => {
-    const totalLeaves = leaves.length;
-    const activeLeavesCount = activeLeaves.length;
-    const todayLeavesCount = todayLeaves.length;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
     
-    return {
-      total: totalLeaves,
-      active: activeLeavesCount,
-      today: todayLeavesCount
-    };
+    if (type === 'checkbox') {
+      const checkbox = e.target as HTMLInputElement;
+      setFormData(prev => ({
+        ...prev,
+        [name]: checkbox.checked
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
-  const leaveStats = getStats();
+const handleSubmit = () => {
+  console.log('Submitting form data:', formData);
+  
+  if (selectedLeave) {
+    console.log('Updating leave with ID:', selectedLeave.leaveId);
+    
+    const updateData: any = {};
+    if (formData.leaveTypeId) updateData.leaveTypeId = formData.leaveTypeId;
+    if (formData.startDate) updateData.startDate = formData.startDate;
+    if (formData.endDate) updateData.endDate = formData.endDate;
+    
+    dispatch(updateLeave({
+      id: selectedLeave.leaveId,
+      ...updateData
+    })).then((result) => {
+      console.log('Update result:', result);
+      // После успешного обновления
+      dispatch(fetchLeaves(searchQuery));
+      dispatch(fetchLeaveStats());
+    }).catch(error => {
+      console.error('Update failed:', error);
+    });
+  } else {
+    const processedData: LeaveFormData = {
+      employeePersonalNumber: formData.employeePersonalNumber,
+      leaveTypeId: formData.leaveTypeId,
+      startDate: formData.startDate,
+      endDate: formData.endDate
+    };
+    
+    dispatch(createLeave(processedData)).then(() => {
+      // После успешного создания
+      dispatch(fetchLeaves(searchQuery));
+      dispatch(fetchLeaveStats());
+    });
+  }
+  handleCloseDialog();
+};
 
-  // Функция для фильтрации отпусков
-  const filterLeaves = useCallback((leavesList: Leave[]) => {
-    let filtered = leavesList;
+  const handleOpenDeleteDialog = (leaveId: number, employeeName: string) => {
+    setLeaveToDelete(leaveId);
+    setDeleteEmployeeName(employeeName);
+    setOpenDeleteDialog(true);
+  };
 
-    // Фильтр по статусу
-    switch (filter) {
-      case 'active':
-        filtered = activeLeaves;
-        break;
-      case 'today':
-        filtered = todayLeaves;
-        break;
-      default:
-        filtered = leavesList;
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setLeaveToDelete(null);
+    setDeleteEmployeeName('');
+  };
+
+  const handleDelete = () => {
+    if (leaveToDelete !== null) {
+      dispatch(deleteLeave(leaveToDelete));
+      handleCloseDeleteDialog();
     }
+  };
 
-    // Фильтр по сотруднику
-    if (employeeFilter) {
-      filtered = filtered.filter(leave => leave.employee_personal_number === employeeFilter);
+  const handleCloseSnackbar = () => {
+    dispatch(clearSuccessMessage());
+    if (deleteStatus === 'succeeded') {
+      dispatch(resetDeleteStatus());
     }
+  };
 
-    // Фильтр по типу отпуска
-    if (leaveTypeFilter) {
-      filtered = filtered.filter(leave => leave.leave_type_id === leaveTypeFilter);
-    }
+  const handleRefresh = () => {
+    dispatch(fetchLeaves(searchQuery));
+    dispatch(fetchLeaveStats());
+  };
 
-    return filtered;
-  }, [filter, employeeFilter, leaveTypeFilter, activeLeaves, todayLeaves]);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU');
+  };
 
-  // Список отпусков для отображения (с поиском и фильтрами)
-  const leavesToDisplay = useMemo(() => {
-    const filteredLeaves = filterLeaves(displayedLeaves);
-    return searchInput ? searchResults.topMatches : filteredLeaves;
-  }, [displayedLeaves, searchInput, searchResults.topMatches, filterLeaves]);
+  const calculateDays = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  };
+
+  const isCurrentLeave = (endDate: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(endDate) >= today;
+  };
 
   if (status === 'loading' && leaves.length === 0) {
     return (
-      <div className={styles.loadingContainer}>
-        <Spin size="large" />
-        <p>Загрузка отпусков...</p>
+      <div className={styles.leavesManager}>
+        <div className={styles.loadingContainer}>
+          <div className={styles.spinner}></div>
+          <p>Загрузка данных...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && leaves.length === 0) {
+    return (
+      <div className={styles.leavesManager}>
+        <div className={styles.errorMessage}>
+          <p>Ошибка при загрузке данных: {error}</p>
+          <button onClick={handleRefresh} className={styles.btnPrimary}>
+            Попробовать снова
+          </button>
+        </div>
       </div>
     );
   }
@@ -320,228 +224,343 @@ const LeavesManager: React.FC = () => {
       <div className={styles.pageHeader}>
         <h1>Управление отпусками</h1>
         <div className={styles.headerActions}>
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={handleAddLeave}
+          <button
+            onClick={handleRefresh}
+            className={`${styles.btn} ${styles.btnSecondary}`}
           >
-            Создать отпуск
-          </Button>
+            <span className={styles.refreshIcon}>↻</span>
+            Обновить
+          </button>
+          <button
+            onClick={() => handleOpenDialog()}
+            className={`${styles.btn} ${styles.btnPrimary}`}
+          >
+            <span className={styles.addIcon}>+</span>
+            Добавить отпуск
+          </button>
         </div>
       </div>
 
+      {/* Статистика */}
+      <div className={styles.statsGrid}>
+        <div className={styles.statCard}>
+          <div className={styles.statIcon}>
+            <span>🏖️</span>
+          </div>
+          <div className={styles.statContent}>
+            <p className={styles.statLabel}>Всего отпусков</p>
+            <p className={styles.statValue}>{stats?.total || 0}</p>
+          </div>
+        </div>
+        
+        <div className={styles.statCard}>
+          <div className={`${styles.statIcon} ${styles.success}`}>
+            <span>✓</span>
+          </div>
+          <div className={styles.statContent}>
+            <p className={styles.statLabel}>Текущие</p>
+            <p className={styles.statValue}>{stats?.active || 0}</p>
+          </div>
+        </div>
+        
+        <div className={styles.statCard}>
+          <div className={`${styles.statIcon} ${styles.warning}`}>
+            <span>📅</span>
+          </div>
+          <div className={styles.statContent}>
+            <p className={styles.statLabel}>Завершенные</p>
+            <p className={styles.statValue}>{stats?.completed || 0}</p>
+          </div>
+        </div>
+        
+        <div className={styles.statCard}>
+          <div className={`${styles.statIcon} ${styles.info}`}>
+            <span>📊</span>
+          </div>
+          <div className={styles.statContent}>
+            <p className={styles.statLabel}>Типы отпусков</p>
+            <p className={styles.statValue}>{leaveTypes.length}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Поиск */}
       <div className={styles.searchSection}>
-        <div className={styles.searchInputContainer}>
-          <Search
-            placeholder="Поиск по сотруднику, личному номеру или типу отпуска..."
-            allowClear
-            size="large"
-            value={searchInput}
+        <h2>Поиск сотрудников</h2>
+        <div className={styles.searchControl}>
+          <input
+            type="text"
+            placeholder="Поиск по ФИО или табельному номеру..."
+            value={searchQuery}
             onChange={handleSearchChange}
-            onSearch={handleSearch}
-            prefix={<SearchOutlined />}
             className={styles.searchInput}
           />
-          {searchInput && (
-            <div className={styles.searchInfo}>
-              <span className={styles.searchInfoText}>
-                {searchResults.exactMatches.length > 0
-                  ? `Найдено полных совпадений: ${searchResults.exactMatches.length}`
-                  : `Найдено отпусков: ${searchResults.allMatches.length}`}
-              </span>
-            </div>
+          {searchQuery && (
+            <button
+              onClick={() => dispatch(setSearchQuery(''))}
+              className={styles.clearSearchButton}
+              title="Очистить поиск"
+            >
+              ×
+            </button>
           )}
-        </div>
-
-        <div className={styles.filterSection}>
-          <Row gutter={[16, 16]}>
-            <Col span={8}>
-              <div className={styles.filterGroup}>
-                <label>Статус:</label>
-                <Select
-                  value={filter}
-                  onChange={setFilter}
-                  style={{ width: '100%' }}
-                  size="large"
-                >
-                  <Option value="all">Все отпуска</Option>
-                  <Option value="active">Текущие отпуска</Option>
-                  <Option value="today">Сегодня в отпуске</Option>
-                </Select>
-              </div>
-            </Col>
-            
-            <Col span={8}>
-              <div className={styles.filterGroup}>
-                <label>Сотрудник:</label>
-                <Select
-                  value={employeeFilter}
-                  onChange={setEmployeeFilter}
-                  style={{ width: '100%' }}
-                  size="large"
-                  allowClear
-                  placeholder="Выберите сотрудника"
-                  showSearch
-                  optionFilterProp="children"
-                >
-                  {employees.map(employee => (
-                    <Option key={employee.personalNumber} value={employee.personalNumber}>
-                      {employee.fullName} ({employee.personalNumber})
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </Col>
-            
-            <Col span={8}>
-              <div className={styles.filterGroup}>
-                <label>Тип отпуска:</label>
-                <Select
-                  value={leaveTypeFilter}
-                  onChange={setLeaveTypeFilter}
-                  style={{ width: '100%' }}
-                  size="large"
-                  allowClear
-                  placeholder="Выберите тип отпуска"
-                  loading={loadingLeaveTypes}
-                >
-                  {leaveTypes.map(type => (
-                    <Option key={type.leave_type_id} value={type.leave_type_id}>
-                      {type.leave_type_name}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </Col>
-          </Row>
-        </div>
-
-        <div className={styles.searchStats}>
-          <span className={styles.statLabel}>Всего отпусков:</span>
-          <span className={styles.statValue}>{leaveStats.total}</span>
-          <span className={styles.statLabel}>Показано:</span>
-          <span className={styles.statValue}>{displayedLeaves.length}</span>
-          {searchInput ? (
-            <>
-              <span className={styles.statLabel}>Результатов:</span>
-              <span className={styles.statValue}>{searchResults.allMatches.length}</span>
-            </>
-          ) : null}
-          <span className={styles.statLabel}>Текущие:</span>
-          <span className={`${styles.statValue} ${styles.active}`}>
-            {leaveStats.active}
-          </span>
-          <span className={styles.statLabel}>Сегодня:</span>
-          <span className={`${styles.statValue} ${styles.today}`}>
-            {leaveStats.today}
-          </span>
         </div>
       </div>
 
-      {error && status === 'error' ? (
-        <div className={styles.errorMessage}>
-          <p>Ошибка при загрузке отпусков: {error}</p>
-          <Button onClick={() => dispatch(fetchLeaves())}>
-            Повторить попытку
-          </Button>
-        </div>
-      ) : searchInput && searchResults.allMatches.length === 0 ? (
-        <div className={styles.noResults}>
-          <p>Отпуски не найдены по запросу "{searchInput}"</p>
-          <Button onClick={() => setSearchInput('')}>
-            Очистить поиск
-          </Button>
-        </div>
-      ) : (
-        <>
-          <div className={styles.leavesGrid}>
-            {leavesToDisplay.map((leave: any) => (
-              <LeaveCard
-                key={leave.leave_id}
-                leave={leave}
-                employee={employees.find(emp => emp.personalNumber === leave.employee_personal_number)}
-                leaveType={leaveTypes.find(type => type.leave_type_id === leave.leave_type_id)}
-                onEdit={handleEditClick}
-                onDelete={handleDeleteClick}
-                isExactMatch={leave.isExactMatch}
-              />
-            ))}
+      {/* Таблица отпусков */}
+      <div className={styles.tableContainer}>
+        <div className={styles.tableResponsive}>
+          <table className={styles.dataTable}>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Сотрудник</th>
+                <th>Табельный номер</th>
+                <th>Тип отпуска</th>
+                <th>Начало</th>
+                <th>Окончание</th>
+                <th>Дней</th>
+                <th>Статус</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+
+<tbody>
+  {leaves.map((leave) => {
+    // Проверяем, есть ли необходимые данные
+    if (!leave.employee || !leave.leaveType) {
+      return null; // Пропускаем некорректные записи
+    }
+    
+    const days = calculateDays(leave.startDate, leave.endDate);
+    const isActive = isCurrentLeave(leave.endDate);
+    
+    return (
+      <tr key={leave.leaveId}>
+        <td>{leave.leaveId}</td>
+        <td>
+          <div className={styles.employeeInfo}>
+            <strong>{leave.employee.fullName}</strong>
+            {leave.employee.position && (
+              <small>{leave.employee.position}</small>
+            )}
           </div>
-
-          {searchInput && searchResults.allMatches.length > searchResults.topMatches.length && (
-            <div className={styles.searchMoreInfo}>
-              <div className={styles.searchMoreText}>
-                Показаны {searchResults.topMatches.length} наиболее релевантных результатов из {searchResults.allMatches.length}
-              </div>
-              {searchResults.exactMatches.length === 0 && (
-                <Button
-                  type="link"
-                  onClick={() => {
-                    message.info('Для просмотра всех результатов уточните поисковый запрос');
-                  }}
-                >
-                  Уточните запрос для поиска остальных отпусков
-                </Button>
-              )}
-            </div>
-          )}
-
-          {!searchInput && displayedLeaves.length < leaves.length && (
-            <div className={styles.loadMoreContainer}>
-              <div className={styles.loadMoreInfo}>
-                Показано {displayedLeaves.length} из {leaves.length} отпусков
-              </div>
-              <Button
-                type="primary"
-                onClick={() => setDisplayedLeaves(leaves)}
-                className={styles.loadMoreButton}
-              >
-                Показать все отпуски
-              </Button>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Модальное окно создания отпуска */}
-      <AddLeaveModal
-        visible={addModal}
-        onCancel={handleCancelAdd}
-        employees={employees}
-        leaveTypes={leaveTypes}
-        refreshLeaves={refreshLeaves}
-      />
-
-      {/* Модальное окно редактирования отпуска */}
-      <EditLeaveModal
-        visible={editModal}
-        onCancel={handleCancelEdit}
-        editingLeave={editingLeave}
-        employees={employees}
-        leaveTypes={leaveTypes}
-        refreshLeaves={refreshLeaves}
-      />
-
-      {/* Модальное окно подтверждения удаления */}
-      <Modal
-        title="Подтверждение удаления отпуска"
-        open={deleteModal}
-        onOk={handleDeleteConfirm}
-        onCancel={() => setDeleteModal(false)}
-        okText="Удалить"
-        cancelText="Отмена"
-        okType="danger"
-      >
-        {leaveToDelete && (
-          <div className={styles.deleteConfirmation}>
-            <p>Вы уверены, что хотите удалить отпуск?</p>
-            <p><strong>Сотрудник:</strong> {leaveToDelete.employeeName}</p>
-            <p><strong>Тип отпуска:</strong> {leaveToDelete.leaveType}</p>
-            <p className={styles.warningText}>Это действие нельзя отменить!</p>
+        </td>
+        <td>{leave.employee.personalNumber}</td>
+        <td>{leave.leaveType.leaveTypeName}</td>
+        <td>{formatDate(leave.startDate)}</td>
+        <td>{formatDate(leave.endDate)}</td>
+        <td>{days}</td>
+        <td>
+          <span className={`${styles.statusBadge} ${
+            isActive ? styles.success : styles.warning
+          }`}>
+            {isActive ? 'Текущий' : 'Завершен'}
+          </span>
+        </td>
+        <td className={styles.actionsCell}>
+          <button
+            onClick={() => handleOpenDialog(leave)}
+            className={`${styles.btnIcon} ${styles.btnEdit}`}
+            title="Редактировать"
+          >
+            ✏️
+          </button>
+          <button
+            onClick={() => handleOpenDeleteDialog(leave.leaveId, leave.employee.fullName)}
+            className={`${styles.btnIcon} ${styles.btnDelete}`}
+            title="Удалить"
+          >
+            🗑️
+          </button>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
+          </table>
+        </div>
+        {status === 'loading' && (
+          <div className={styles.loadingOverlay}>
+            <div className={styles.spinner}></div>
+            <p>Загрузка...</p>
           </div>
         )}
-      </Modal>
+        {leaves.length === 0 && (
+          <div className={styles.emptyState}>
+            <p>Нет данных об отпусках</p>
+          </div>
+        )}
+      </div>
+
+      {/* Модальное окно добавления/редактирования */}
+      {openDialog && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h2>{selectedLeave ? 'Редактирование отпуска' : 'Добавление отпуска'}</h2>
+              <button onClick={handleCloseDialog} className={styles.closeButton}>×</button>
+            </div>
+            
+            <div className={styles.form}>
+              <div className={styles.formGrid}>
+                {/* Сотрудник */}
+                <div className={styles.formGroup}>
+                  <label>Сотрудник: *</label>
+                  <select
+                    name="employeePersonalNumber"
+                    value={formData.employeePersonalNumber}
+                    onChange={handleInputChange}
+                    required
+                    disabled={!!selectedLeave}
+                    className={selectedLeave ? styles.disabledInput : styles.select}
+                  >
+                    <option value="">-- Выберите сотрудника --</option>
+                    {employees.map((employee) => (
+                      <option key={employee.personalNumber} value={employee.personalNumber}>
+                        {employee.fullName} ({employee.personalNumber})
+                      </option>
+                    ))}
+                  </select>
+                  {selectedLeave && (
+                    <small className={styles.helperText}>Сотрудника нельзя изменить</small>
+                  )}
+                </div>
+                
+                {/* Тип отпуска */}
+                <div className={styles.formGroup}>
+                  <label>Тип отпуска: *</label>
+                  <select
+                    name="leaveTypeId"
+                    value={formData.leaveTypeId}
+                    onChange={handleInputChange}
+                    required
+                    className={styles.select}
+                  >
+                    <option value="">-- Выберите тип отпуска --</option>
+                    {leaveTypes.map((leaveType) => (
+                      <option key={leaveType.leaveTypeId} value={leaveType.leaveTypeId}>
+                        {leaveType.leaveTypeName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Дата начала */}
+                <div className={styles.formGroup}>
+                  <label>Дата начала: *</label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleInputChange}
+                    required
+                    className={styles.input}
+                  />
+                </div>
+                
+                {/* Дата окончания */}
+                <div className={styles.formGroup}>
+                  <label>Дата окончания: *</label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={formData.endDate}
+                    onChange={handleInputChange}
+                    required
+                    className={styles.input}
+                    min={formData.startDate}
+                  />
+                  {formData.startDate && formData.endDate && (
+                    <small className={styles.helperText}>
+                      Продолжительность: {calculateDays(formData.startDate, formData.endDate)} дней
+                    </small>
+                  )}
+                </div>
+              </div>
+              
+              {/* Кнопки */}
+              <div className={styles.formActions}>
+                <button
+                  type="button"
+                  onClick={handleCloseDialog}
+                  className={styles.cancelButton}
+                >
+                  Отмена
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className={styles.submitButton}
+                  disabled={!formData.employeePersonalNumber || !formData.leaveTypeId || !formData.startDate || !formData.endDate}
+                >
+                  {selectedLeave ? 'Сохранить изменения' : 'Добавить отпуск'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно подтверждения удаления */}
+      {openDeleteDialog && (
+        <div className={styles.modalOverlay}>
+          <div className={`${styles.modalContent} ${styles.modalSm}`}>
+            <div className={styles.modalHeader}>
+              <h2>Подтверждение удаления</h2>
+              <button onClick={handleCloseDeleteDialog} className={styles.closeButton}>×</button>
+            </div>
+            
+            <div className={styles.form}>
+              <div className={styles.deleteConfirm}>
+                <div className={styles.deleteIcon}>
+                  <span>⚠️</span>
+                </div>
+                <div className={styles.deleteMessage}>
+                  <h3>Вы уверены, что хотите удалить отпуск?</h3>
+                  <p>
+                    Отпуск сотрудника <strong>{deleteEmployeeName}</strong> будет удален.
+                  </p>
+                  <p>Это действие нельзя отменить. Все данные об отпуске будут удалены.</p>
+                </div>
+              </div>
+              
+              <div className={styles.formActions}>
+                <button
+                  type="button"
+                  onClick={handleCloseDeleteDialog}
+                  className={styles.cancelButton}
+                >
+                  Отмена
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className={styles.deleteConfirmButton}
+                  disabled={deleteStatus === 'loading'}
+                >
+                  {deleteStatus === 'loading' ? 'Удаление...' : 'Удалить'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Уведомления */}
+      {successMessage && (
+        <div className={`${styles.notification} ${styles.success}`}>
+          <p>{successMessage}</p>
+          <button onClick={handleCloseSnackbar} className={styles.notificationClose}>×</button>
+        </div>
+      )}
+
+      {deleteStatus === 'failed' && (
+        <div className={`${styles.notification} ${styles.error}`}>
+          <p>{error || 'Ошибка при удалении отпуска'}</p>
+          <button onClick={handleCloseSnackbar} className={styles.notificationClose}>×</button>
+        </div>
+      )}
     </div>
   );
 };

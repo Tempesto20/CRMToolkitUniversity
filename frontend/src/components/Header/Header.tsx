@@ -13,11 +13,7 @@ const Header: React.FC = () => {
     { path: '/employees', label: 'Сотрудники', icon: '👥' },
     { path: '/locomotives', label: 'Локомотивы', icon: '🚂' },
     { path: '/leaves', label: 'Отпуска', icon: '📅' },
-    { path: '/work-types', label: 'Виды работ', icon: '🔧' },
-    { path: '/service-types', label: 'Службы', icon: '🏭' },
-    { path: '/location-works', label: 'Места работы', icon: '📍' },
-    { path: '/leave-types', label: 'Типы отпусков', icon: '✈️' },
-    // { path: '/brigadas', label: 'Бригады', icon: '👷' },
+    { path: '/location-works', label: 'Районы работы', icon: '📍' },
   ];
 
   return (

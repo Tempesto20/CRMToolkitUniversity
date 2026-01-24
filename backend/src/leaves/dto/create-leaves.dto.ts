@@ -1,42 +1,32 @@
+
+// backend/src/leaves/dto/create-leaves.dto.ts
 import { 
-  IsNumber, 
   IsNotEmpty, 
-  IsDateString, 
-  IsOptional, 
-  Validate,
-  ValidationArguments, 
-  ValidatorConstraint, 
-  ValidatorConstraintInterface 
+  IsDateString,
+  Min,
+  IsNumber,
+  IsInt
 } from 'class-validator';
-
-@ValidatorConstraint({ name: 'isDateAfter', async: false })
-export class IsDateAfterConstraint implements ValidatorConstraintInterface {
-  validate(propertyValue: string, args: ValidationArguments) {
-    const startDate = new Date(propertyValue);
-    const endDate = new Date(args.object[args.constraints[0]]);
-    return startDate > endDate;
-  }
-
-  defaultMessage(args: ValidationArguments) {
-    return `End date must be after start date`;
-  }
-}
+import { Type } from 'class-transformer';
 
 export class CreateLeaveDto {
-  @IsNumber()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Личный номер сотрудника обязателен' })
+  @IsInt({ message: 'Личный номер сотрудника должен быть целым числом' })
+  @Min(1, { message: 'Личный номер сотрудника должен быть положительным числом' })
+  @Type(() => Number)
   employeePersonalNumber: number;
 
-  @IsNumber()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID типа отпуска обязателен' })
+  @IsInt({ message: 'ID типа отпуска должен быть целым числом' })
+  @Min(1, { message: 'ID типа отпуска должен быть положительным числом' })
+  @Type(() => Number)
   leaveTypeId: number;
 
-  @IsDateString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Дата начала обязательна' })
+  @IsDateString({}, { message: 'Неверный формат даты начала' })
   startDate: string;
 
-  @IsDateString()
-  @IsNotEmpty()
-  @Validate(IsDateAfterConstraint, ['startDate'])
+  @IsNotEmpty({ message: 'Дата окончания обязательна' })
+  @IsDateString({}, { message: 'Неверный формат даты окончания' })
   endDate: string;
 }

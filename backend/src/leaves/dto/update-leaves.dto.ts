@@ -1,11 +1,8 @@
 // import { 
 //   IsNumber, 
 //   IsOptional, 
-//   IsDateString, 
-//   Validate,
-//   ValidateIf 
+//   IsDateString
 // } from 'class-validator';
-// import { IsDateAfterConstraint } from './create-leaves.dto';
 
 // export class UpdateLeaveDto {
 //   @IsNumber()
@@ -18,30 +15,32 @@
 
 //   @IsDateString()
 //   @IsOptional()
-//   @ValidateIf((o) => o.startDate || o.endDate)
-//   @Validate(IsDateAfterConstraint, ['startDate'])
 //   endDate?: string;
 // }
-
 
 
 
 import { 
   IsNumber, 
   IsOptional, 
-  IsDateString
+  IsDateString,
+  IsInt,
+  Min
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateLeaveDto {
-  @IsNumber()
   @IsOptional()
+  @IsInt({ message: 'ID типа отпуска должен быть целым числом' })
+  @Min(1, { message: 'ID типа отпуска должен быть положительным числом' })
+  @Type(() => Number)
   leaveTypeId?: number;
 
-  @IsDateString()
   @IsOptional()
+  @IsDateString({}, { message: 'Неверный формат даты начала' })
   startDate?: string;
 
-  @IsDateString()
   @IsOptional()
+  @IsDateString({}, { message: 'Неверный формат даты окончания' })
   endDate?: string;
 }

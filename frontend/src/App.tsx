@@ -8,7 +8,6 @@ import EmployeesManager from './components/Employees/EmployeesManager';
 import LocomotivesManager from './components/Locomotives/LocomotivesManager';
 import LeavesManager from './components/Leaves/LeavesManager';
 import LocationWorkManager from './components/Locations/LocationWorkManager';
-import LeaveTypesManager from './components/LeaveTypesManager';
 
 function App() {
   return (
@@ -21,7 +20,6 @@ function App() {
             <Route path="/locomotives" element={<LocomotivesManager />} />
             <Route path="/leaves" element={<LeavesManager />} />
             <Route path="/location-works" element={<LocationWorkManager />} />
-            <Route path="/leave-types" element={<LeaveTypesManager />} />
           </Routes>
         </Layout>
       </Router>

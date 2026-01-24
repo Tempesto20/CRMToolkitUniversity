@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../redux/store';
+import { RootState, AppDispatch } from '../../redux/store';
 import { 
   fetchWorkTypes, 
   createWorkType, 
   updateWorkType, 
   deleteWorkType,
   fetchWorkTypesByService 
-} from '../redux/slices/workTypesSlice';
+} from '../../redux/slices/workTypesSlice';
 import styles from './WorkTypesManager.module.scss';
 
 const WorkTypesManager: React.FC = () => {

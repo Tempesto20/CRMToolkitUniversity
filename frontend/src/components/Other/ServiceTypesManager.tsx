@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../redux/store';
+import { RootState, AppDispatch } from '../../redux/store';
 import { 
   fetchServiceTypes, 
   createServiceType, 
   updateServiceType, 
   deleteServiceType 
-} from '../redux/slices/serviceTypesSlice';
+} from '../../redux/slices/serviceTypesSlice';
 import styles from './ServiceTypesManager.module.scss';
 
 const ServiceTypesManager: React.FC = () => {

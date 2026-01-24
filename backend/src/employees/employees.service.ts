@@ -223,6 +223,22 @@ export class EmployeesService {
       .getMany();
   }
 
+
+// В сервис employees.service.ts добавьте этот метод:
+async searchEmployees(searchTerm: string): Promise<Employee[]> {
+  return this.employeesRepository
+    .createQueryBuilder('employee')
+    .leftJoinAndSelect('employee.serviceType', 'serviceType')
+    .leftJoinAndSelect('employee.workType', 'workType')
+    .leftJoinAndSelect('employee.locomotive', 'locomotive')
+    .leftJoinAndSelect('employee.brigada', 'brigada')
+    .where('employee.fullName ILIKE :search', { search: `%${searchTerm}%` })
+    .orWhere('CAST(employee.personalNumber AS TEXT) LIKE :search', { search: `%${searchTerm}%` })
+    .orWhere('employee.position ILIKE :search', { search: `%${searchTerm}%` })
+    .getMany();
+}
+
+
   async findAll(): Promise<Employee[]> {
     return this.employeesRepository.find({
       relations: ['serviceType', 'workType', 'locomotive', 'brigada'],

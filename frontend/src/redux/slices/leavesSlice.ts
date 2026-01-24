@@ -1,209 +1,344 @@
+// src/redux/slices/leavesSlice.ts
 import axios from 'axios';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// Интерфейсы для данных
-interface EmployeeDetails {
+// Интерфейсы для ответов бэкенда
+interface ApiLeave {
+  leaveId: number;
+  employee: {
+    personalNumber: number;
+    fullName: string;
+    position?: string;
+  } | null;
+  leaveType: {
+    leaveTypeId: number;
+    leaveTypeName: string;
+    description?: string;
+  } | null;
+  startDate: string;
+  endDate: string;
+}
+
+interface ApiLeaveType {
+  leaveTypeId: number;
+  leaveTypeName: string;
+  description?: string;
+}
+
+interface ApiEmployee {
   personalNumber: number;
   fullName: string;
   position?: string;
-  serviceType?: {
-    serviceTypeName: string;
-  };
-  brigada?: {
-    brigadaName: string;
-  };
 }
 
-interface LeaveTypeDetails {
-  leave_type_id: number;
-  leave_type_name: string;
-  description: string;
-}
-
-interface LeaveWithDetails {
-  leave_id: number;
-  employee_personal_number: number;
-  leave_type_id: number;
-  start_date: string;
-  end_date: string;
-  employee?: EmployeeDetails;
-  leaveType?: LeaveTypeDetails;
-  leave_type_name?: string;
-}
-
-interface Leave {
-  leave_id: number;
-  employee_personal_number: number;
-  leave_type_id: number;
-  start_date: string;
-  end_date: string;
-  leave_type_name?: string;
-  employee_full_name?: string;
-  leave_type_description?: string;
-}
-
-interface LeaveType {
-  leave_type_id: number;
-  leave_type_name: string;
-  description: string;
-}
-
-interface LeaveStats {
+interface ApiLeaveStats {
   total: number;
   active: number;
-  today: number;
-  byType: Record<string, number>;
+  completed: number;
+  monthlyStats: any[];
+  typeStats: any[];
 }
 
-// Async thunks для данных с деталями
-export const fetchLeavesWithDetails = createAsyncThunk<LeaveWithDetails[]>(
-  'leaves/fetchLeavesWithDetailsStatus',
-  async () => {
-    const { data } = await axios.get<LeaveWithDetails[]>('http://localhost:3000/leaves/with-details');
-    return data;
+// Интерфейсы для фронтенда
+export interface Leave {
+  leaveId: number;
+  employee: {
+    personalNumber: number;
+    fullName: string;
+    position?: string;
+  };
+  leaveType: {
+    leaveTypeId: number;
+    leaveTypeName: string;
+    description?: string;
+  };
+  startDate: string;
+  endDate: string;
+}
+
+export interface LeaveFormData {
+  leaveId?: number;
+  employeePersonalNumber: string;
+  leaveTypeId: string;
+  startDate: string;
+  endDate: string;
+}
+
+// Преобразование с проверкой на null
+const transformApiLeave = (apiLeave: ApiLeave): Leave | null => {
+  try {
+    if (!apiLeave) {
+      console.warn('Empty leave data');
+      return null;
+    }
+    
+    const employee = apiLeave.employee || {
+      personalNumber: 0,
+      fullName: 'Неизвестный сотрудник',
+      position: 'Не указана'
+    };
+    
+    const leaveType = apiLeave.leaveType || {
+      leaveTypeId: 0,
+      leaveTypeName: 'Неизвестный тип',
+      description: ''
+    };
+    
+    if (!apiLeave.startDate || !apiLeave.endDate) {
+      console.warn('Missing dates for leave:', apiLeave.leaveId);
+      return null;
+    }
+    
+    return {
+      leaveId: apiLeave.leaveId,
+      employee: {
+        personalNumber: employee.personalNumber,
+        fullName: employee.fullName,
+        position: employee.position
+      },
+      leaveType: {
+        leaveTypeId: leaveType.leaveTypeId,
+        leaveTypeName: leaveType.leaveTypeName,
+        description: leaveType.description
+      },
+      startDate: apiLeave.startDate,
+      endDate: apiLeave.endDate
+    };
+  } catch (error) {
+    console.error('Error transforming leave:', error, apiLeave);
+    return null;
+  }
+};
+
+const transformApiLeaveType = (apiType: ApiLeaveType) => ({
+  leaveTypeId: apiType.leaveTypeId,
+  leaveTypeName: apiType.leaveTypeName,
+  description: apiType.description
+});
+
+const transformApiEmployee = (apiEmployee: ApiEmployee) => ({
+  personalNumber: apiEmployee.personalNumber,
+  fullName: apiEmployee.fullName,
+  position: apiEmployee.position
+});
+
+// Создаем экземпляр axios с базовым URL
+const api = axios.create({
+  baseURL: 'http://localhost:3000',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Interceptor для отладки запросов/ответов
+api.interceptors.request.use(
+  config => {
+    console.log('Request:', config.method?.toUpperCase(), config.url, config.data);
+    return config;
+  },
+  error => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
   }
 );
 
-export const fetchActiveLeavesWithDetails = createAsyncThunk<LeaveWithDetails[]>(
-  'leaves/fetchActiveLeavesWithDetailsStatus',
-  async () => {
-    const { data } = await axios.get<LeaveWithDetails[]>('http://localhost:3000/leaves/active/with-details');
-    return data;
+api.interceptors.response.use(
+  response => {
+    console.log('Response:', response.status, response.config.url);
+    
+    // Безопасная проверка типа данных
+    if (Array.isArray(response.data)) {
+      console.log('Data length:', response.data.length);
+    } else if (response.data && typeof response.data === 'object') {
+      const keys = Object.keys(response.data);
+      console.log('Data keys:', keys);
+    } else {
+      console.log('Data:', response.data);
+    }
+    
+    return response;
+  },
+  error => {
+    console.error('Response error:', error.response?.status, error.config?.url, error.response?.data);
+    return Promise.reject(error);
   }
 );
 
-export const fetchTodayLeavesWithDetails = createAsyncThunk<LeaveWithDetails[]>(
-  'leaves/fetchTodayLeavesWithDetailsStatus',
-  async () => {
-    const { data } = await axios.get<LeaveWithDetails[]>('http://localhost:3000/leaves/today/with-details');
-    return data;
-  }
-);
-
-export const fetchEmployeeLeavesWithDetails = createAsyncThunk<LeaveWithDetails[], number>(
-  'leaves/fetchEmployeeLeavesWithDetailsStatus',
-  async (personalNumber: number) => {
-    const { data } = await axios.get<LeaveWithDetails[]>(`http://localhost:3000/leaves/employee/${personalNumber}/with-details`);
-    return data;
-  }
-);
-
-export const fetchLeavesByPeriodWithDetails = createAsyncThunk<LeaveWithDetails[], { startDate: string; endDate: string }>(
-  'leaves/fetchLeavesByPeriodWithDetailsStatus',
-  async ({ startDate, endDate }) => {
-    const { data } = await axios.get<LeaveWithDetails[]>(`http://localhost:3000/leaves/period/with-details?start=${startDate}&end=${endDate}`);
-    return data;
-  }
-);
-
-// Существующие thunks
-export const fetchLeaves = createAsyncThunk<Leave[]>(
+export const fetchLeaves = createAsyncThunk(
   'leaves/fetchLeavesStatus',
+  async (searchQuery?: string) => {
+    try {
+      const url = searchQuery 
+        ? `/leaves?search=${encodeURIComponent(searchQuery)}`
+        : '/leaves';
+      console.log('Fetching leaves from:', url);
+      const response = await api.get<ApiLeave[]>(url);
+      
+      // Проверяем данные
+      if (!Array.isArray(response.data)) {
+        console.error('Expected array but got:', typeof response.data);
+        throw new Error('Invalid response format');
+      }
+      
+      console.log('Leaves API response length:', response.data.length);
+      
+      // Преобразуем и фильтруем данные
+      const transformedLeaves = response.data
+        .map(transformApiLeave)
+        .filter((leave): leave is Leave => leave !== null);
+      
+      console.log('Successfully transformed leaves:', transformedLeaves.length);
+      
+      if (transformedLeaves.length < response.data.length) {
+        console.warn(`Filtered out ${response.data.length - transformedLeaves.length} invalid leaves`);
+      }
+      
+      return transformedLeaves;
+    } catch (error: any) {
+      console.error('Error fetching leaves:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+);
+
+export const fetchLeaveStats = createAsyncThunk(
+  'leaves/fetchLeaveStatsStatus',
   async () => {
-    const { data } = await axios.get<Leave[]>('http://localhost:3000/leaves');
-    return data;
+    try {
+      const { data } = await api.get<ApiLeaveStats>('/leaves/stats');
+      return data;
+    } catch (error: any) {
+      console.error('Error fetching leave stats:', error);
+      throw error;
+    }
   }
 );
 
-export const fetchActiveLeaves = createAsyncThunk<Leave[]>(
-  'leaves/fetchActiveLeavesStatus',
+export const fetchLeaveTypes = createAsyncThunk(
+  'leaves/fetchLeaveTypesStatus',
   async () => {
-    const { data } = await axios.get<Leave[]>('http://localhost:3000/leaves/active');
-    return data;
+    try {
+      const { data } = await api.get<ApiLeaveType[]>('/leave-types');
+      return data.map(transformApiLeaveType);
+    } catch (error: any) {
+      console.error('Error fetching leave types:', error);
+      throw error;
+    }
   }
 );
 
-export const fetchTodayLeaves = createAsyncThunk<Leave[]>(
-  'leaves/fetchTodayLeavesStatus',
-  async () => {
-    const { data } = await axios.get<Leave[]>('http://localhost:3000/leaves/today');
-    return data;
+export const fetchEmployees = createAsyncThunk(
+  'leaves/fetchEmployeesStatus',
+  async (searchQuery?: string) => {
+    try {
+      const url = searchQuery 
+        ? `/api/employees?search=${encodeURIComponent(searchQuery)}`
+        : '/api/employees';
+      const { data } = await api.get<ApiEmployee[]>(url);
+      return data.map(transformApiEmployee);
+    } catch (error: any) {
+      console.error('Error fetching employees:', error);
+      throw error;
+    }
   }
 );
 
-export const fetchEmployeeLeaves = createAsyncThunk<Leave[], number>(
-  'leaves/fetchEmployeeLeavesStatus',
-  async (personalNumber: number) => {
-    const { data } = await axios.get<Leave[]>(`http://localhost:3000/leaves/employee/${personalNumber}`);
-    return data;
-  }
-);
 
-export const fetchLeavesByPeriod = createAsyncThunk<Leave[], { startDate: string; endDate: string }>(
-  'leaves/fetchLeavesByPeriodStatus',
-  async ({ startDate, endDate }) => {
-    const { data } = await axios.get<Leave[]>(`http://localhost:3000/leaves/period?start=${startDate}&end=${endDate}`);
-    return data;
-  }
-);
-
-export const fetchLeavesStats = createAsyncThunk<LeaveStats>(
-  'leaves/fetchLeavesStatsStatus',
-  async () => {
-    const { data } = await axios.get<LeaveStats>('http://localhost:3000/leaves/stats');
-    return data;
-  }
-);
-
-export const createLeave = createAsyncThunk<Leave, any>(
+export const createLeave = createAsyncThunk(
   'leaves/createLeaveStatus',
-  async (leaveData: any) => {
-    const { data } = await axios.post<Leave>('http://localhost:3000/leaves', leaveData);
-    return data;
+  async (leaveData: Omit<LeaveFormData, 'leaveId'>) => {
+    try {
+      // Преобразуем строки в числа
+      const apiData = {
+        employeePersonalNumber: Number(leaveData.employeePersonalNumber),
+        leaveTypeId: Number(leaveData.leaveTypeId),
+        startDate: leaveData.startDate,
+        endDate: leaveData.endDate
+      };
+      
+      console.log('Sending to API:', apiData);
+      console.log('Data types:', {
+        employeePersonalNumber: typeof apiData.employeePersonalNumber,
+        leaveTypeId: typeof apiData.leaveTypeId,
+        startDate: typeof apiData.startDate,
+        endDate: typeof apiData.endDate,
+      });
+      
+      const { data } = await api.post<ApiLeave>('/leaves', apiData);
+      const transformed = transformApiLeave(data);
+      if (!transformed) {
+        throw new Error('Failed to transform created leave');
+      }
+      return transformed;
+    } catch (error: any) {
+      console.error('Error creating leave:', error);
+      throw error;
+    }
   }
 );
 
-export const updateLeave = createAsyncThunk<Leave, { id: number; [key: string]: any }>(
+export const updateLeave = createAsyncThunk(
   'leaves/updateLeaveStatus',
-  async ({ id, ...updateData }) => {
-    const { data } = await axios.put<Leave>(`http://localhost:3000/leaves/${id}`, updateData);
-    return data;
+  async ({ id, ...updateData }: { id: number } & Partial<LeaveFormData>) => {
+    try {
+      const processedData: any = {};
+      // Исправьте названия полей в соответствии с DTO на бэкенде
+      if (updateData.leaveTypeId) processedData.leaveTypeId = Number(updateData.leaveTypeId);
+      if (updateData.startDate) processedData.startDate = updateData.startDate;
+      if (updateData.endDate) processedData.endDate = updateData.endDate;
+      
+      console.log('Updating leave:', id, processedData);
+      
+      const { data } = await api.put<ApiLeave>(`/leaves/${id}`, processedData);
+      console.log('Update response:', data);
+      
+      const transformed = transformApiLeave(data);
+      if (!transformed) {
+        throw new Error('Failed to transform updated leave');
+      }
+      return transformed;
+    } catch (error: any) {
+      console.error('Error updating leave:', error);
+      throw error;
+    }
   }
 );
 
-export const deleteLeave = createAsyncThunk<number, number>(
+export const deleteLeave = createAsyncThunk(
   'leaves/deleteLeaveStatus',
   async (id: number) => {
-    await axios.delete(`http://localhost:3000/leaves/${id}`);
-    return id;
+    try {
+      await api.delete(`/leaves/${id}`);
+      return id;
+    } catch (error: any) {
+      console.error('Error deleting leave:', error);
+      throw error;
+    }
   }
 );
 
-// Интерфейс состояния
-interface LeavesState {
+interface LeaveState {
   leaves: Leave[];
-  leavesWithDetails: LeaveWithDetails[];
-  activeLeaves: Leave[];
-  activeLeavesWithDetails: LeaveWithDetails[];
-  todayLeaves: Leave[];
-  todayLeavesWithDetails: LeaveWithDetails[];
-  employeeLeaves: Leave[];
-  employeeLeavesWithDetails: LeaveWithDetails[];
-  leavesByPeriod: Leave[];
-  leavesByPeriodWithDetails: LeaveWithDetails[];
-  stats: LeaveStats | null;
+  leaveTypes: ReturnType<typeof transformApiLeaveType>[];
+  employees: ReturnType<typeof transformApiEmployee>[];
+  stats: ApiLeaveStats | null;
   status: 'idle' | 'loading' | 'error';
+  deleteStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
   successMessage: string | null;
-  deleteStatus: 'idle' | 'loading' | 'success' | 'error';
+  searchQuery: string;
 }
 
-const initialState: LeavesState = {
+const initialState: LeaveState = {
   leaves: [],
-  leavesWithDetails: [],
-  activeLeaves: [],
-  activeLeavesWithDetails: [],
-  todayLeaves: [],
-  todayLeavesWithDetails: [],
-  employeeLeaves: [],
-  employeeLeavesWithDetails: [],
-  leavesByPeriod: [],
-  leavesByPeriodWithDetails: [],
+  leaveTypes: [],
+  employees: [],
   stats: null,
   status: 'idle',
+  deleteStatus: 'idle',
   error: null,
   successMessage: null,
-  deleteStatus: 'idle',
+  searchQuery: '',
 };
 
 const leavesSlice = createSlice({
@@ -216,44 +351,12 @@ const leavesSlice = createSlice({
     resetDeleteStatus: (state) => {
       state.deleteStatus = 'idle';
     },
-    clearEmployeeLeaves: (state) => {
-      state.employeeLeaves = [];
-      state.employeeLeavesWithDetails = [];
+    setSearchQuery: (state, action: { payload: string }) => {
+      state.searchQuery = action.payload;
     },
-    clearLeavesByPeriod: (state) => {
-      state.leavesByPeriod = [];
-      state.leavesByPeriodWithDetails = [];
-    }
   },
   extraReducers: (builder) => {
     builder
-      // Обработка данных с деталями
-      .addCase(fetchLeavesWithDetails.pending, (state) => {
-        state.status = 'loading';
-        state.error = null;
-      })
-      .addCase(fetchLeavesWithDetails.fulfilled, (state, action) => {
-        state.leavesWithDetails = action.payload;
-        state.status = 'idle';
-      })
-      .addCase(fetchLeavesWithDetails.rejected, (state, action) => {
-        state.status = 'error';
-        state.error = action.error.message || 'Не удалось загрузить отпуски с деталями';
-      })
-      .addCase(fetchActiveLeavesWithDetails.fulfilled, (state, action) => {
-        state.activeLeavesWithDetails = action.payload;
-      })
-      .addCase(fetchTodayLeavesWithDetails.fulfilled, (state, action) => {
-        state.todayLeavesWithDetails = action.payload;
-      })
-      .addCase(fetchEmployeeLeavesWithDetails.fulfilled, (state, action) => {
-        state.employeeLeavesWithDetails = action.payload;
-      })
-      .addCase(fetchLeavesByPeriodWithDetails.fulfilled, (state, action) => {
-        state.leavesByPeriodWithDetails = action.payload;
-      })
-      
-      // Существующие обработчики
       .addCase(fetchLeaves.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -264,90 +367,102 @@ const leavesSlice = createSlice({
       })
       .addCase(fetchLeaves.rejected, (state, action) => {
         state.status = 'error';
-        state.error = action.error.message || 'Не удалось загрузить отпуски';
+        state.error = action.error.message || 'Failed to fetch leaves';
       })
-      .addCase(fetchActiveLeaves.fulfilled, (state, action) => {
-        state.activeLeaves = action.payload;
+      
+      .addCase(fetchLeaveTypes.pending, (state) => {
+        // Не меняем общий статус при загрузке типов отпусков
       })
-      .addCase(fetchTodayLeaves.fulfilled, (state, action) => {
-        state.todayLeaves = action.payload;
+      .addCase(fetchLeaveTypes.fulfilled, (state, action) => {
+        state.leaveTypes = action.payload;
       })
-      .addCase(fetchEmployeeLeaves.fulfilled, (state, action) => {
-        state.employeeLeaves = action.payload;
+      .addCase(fetchLeaveTypes.rejected, (state, action) => {
+        console.error('Failed to fetch leave types:', action.error.message);
       })
-      .addCase(fetchLeavesByPeriod.fulfilled, (state, action) => {
-        state.leavesByPeriod = action.payload;
+      
+      .addCase(fetchEmployees.pending, (state) => {
+        // Не меняем общий статус при загрузке сотрудников
       })
-      .addCase(fetchLeavesStats.fulfilled, (state, action) => {
+      .addCase(fetchEmployees.fulfilled, (state, action) => {
+        state.employees = action.payload;
+      })
+      .addCase(fetchEmployees.rejected, (state, action) => {
+        console.error('Failed to fetch employees:', action.error.message);
+      })
+      
+      .addCase(fetchLeaveStats.pending, (state) => {
+        // Не меняем общий статус при загрузке статистики
+      })
+      .addCase(fetchLeaveStats.fulfilled, (state, action) => {
         state.stats = action.payload;
       })
-      .addCase(createLeave.pending, (state) => {
-        state.status = 'loading';
-        state.error = null;
+      .addCase(fetchLeaveStats.rejected, (state, action) => {
+        console.error('Failed to fetch leave stats:', action.error.message);
       })
-      .addCase(createLeave.fulfilled, (state, action) => {
-        state.leaves.push(action.payload);
-        state.activeLeaves.push(action.payload);
-        state.status = 'idle';
-        state.successMessage = 'Отпуск успешно создан';
-      })
-      .addCase(createLeave.rejected, (state, action) => {
-        state.status = 'error';
-        state.error = action.error.message || 'Не удалось создать отпуск';
-      })
-      .addCase(updateLeave.pending, (state) => {
-        state.status = 'loading';
-        state.error = null;
-      })
-      .addCase(updateLeave.fulfilled, (state, action) => {
-        const index = state.leaves.findIndex(
-          leave => leave.leave_id === action.payload.leave_id
-        );
-        if (index !== -1) {
-          state.leaves[index] = action.payload;
-        }
-        
-        const activeIndex = state.activeLeaves.findIndex(
-          leave => leave.leave_id === action.payload.leave_id
-        );
-        if (activeIndex !== -1) {
-          state.activeLeaves[activeIndex] = action.payload;
-        }
-        
-        const todayIndex = state.todayLeaves.findIndex(
-          leave => leave.leave_id === action.payload.leave_id
-        );
-        if (todayIndex !== -1) {
-          state.todayLeaves[todayIndex] = action.payload;
-        }
-        
-        state.status = 'idle';
-        state.successMessage = 'Отпуск успешно обновлен';
-      })
-      .addCase(updateLeave.rejected, (state, action) => {
-        state.status = 'error';
-        state.error = action.error.message || 'Не удалось обновить отпуск';
-      })
+      
       .addCase(deleteLeave.pending, (state) => {
         state.deleteStatus = 'loading';
         state.error = null;
       })
       .addCase(deleteLeave.fulfilled, (state, action) => {
         state.leaves = state.leaves.filter(
-          leave => leave.leave_id !== action.payload
+          leave => leave.leaveId !== action.payload
         );
-        state.activeLeaves = state.activeLeaves.filter(
-          leave => leave.leave_id !== action.payload
-        );
-        state.todayLeaves = state.todayLeaves.filter(
-          leave => leave.leave_id !== action.payload
-        );
-        state.deleteStatus = 'success';
+        state.deleteStatus = 'succeeded';
         state.successMessage = 'Отпуск успешно удален';
       })
       .addCase(deleteLeave.rejected, (state, action) => {
-        state.deleteStatus = 'error';
-        state.error = action.error.message || 'Не удалось удалить отпуск';
+        state.deleteStatus = 'failed';
+        state.error = action.error.message || 'Failed to delete leave';
+      })
+      
+      .addCase(createLeave.pending, (state) => {
+        state.status = 'loading';
+      })
+// В leavesSlice.ts в extraReducers:
+.addCase(createLeave.fulfilled, (state, action) => {
+  // Добавляем новый отпуск в начало списка
+  state.leaves.unshift(action.payload);
+  state.status = 'idle';
+  state.successMessage = `Отпуск успешно добавлен для сотрудника ${action.payload.employee.fullName}`;
+  
+  // Обновляем статистику
+  if (state.stats) {
+    state.stats.total += 1;
+    
+    // Проверяем, активный ли отпуск (дата окончания >= сегодня)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endDate = new Date(action.payload.endDate);
+    
+    if (endDate >= today) {
+      state.stats.active += 1;
+    } else {
+      state.stats.completed += 1;
+    }
+  }
+})
+      .addCase(createLeave.rejected, (state, action) => {
+        state.status = 'idle';
+        state.error = action.error.message || 'Failed to create leave';
+      })
+      
+      .addCase(updateLeave.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(updateLeave.fulfilled, (state, action) => {
+        const index = state.leaves.findIndex(
+          leave => leave.leaveId === action.payload.leaveId
+        );
+        if (index !== -1) {
+          state.leaves[index] = action.payload;
+        }
+        state.status = 'idle';
+        state.successMessage = 'Отпуск успешно обновлен';
+      })
+      .addCase(updateLeave.rejected, (state, action) => {
+        state.status = 'idle';
+        state.error = action.error.message || 'Failed to update leave';
       });
   },
 });
@@ -355,7 +470,6 @@ const leavesSlice = createSlice({
 export const { 
   clearSuccessMessage, 
   resetDeleteStatus,
-  clearEmployeeLeaves, 
-  clearLeavesByPeriod 
+  setSearchQuery 
 } = leavesSlice.actions;
 export default leavesSlice.reducer;
