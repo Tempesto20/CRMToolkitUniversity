@@ -1,6 +1,5 @@
 
 
-// backend/src/leaves/leaves.entity.ts
 import { 
   Entity, 
   Column, 

@@ -1,25 +1,3 @@
-// import { 
-//   IsNumber, 
-//   IsOptional, 
-//   IsDateString
-// } from 'class-validator';
-
-// export class UpdateLeaveDto {
-//   @IsNumber()
-//   @IsOptional()
-//   leaveTypeId?: number;
-
-//   @IsDateString()
-//   @IsOptional()
-//   startDate?: string;
-
-//   @IsDateString()
-//   @IsOptional()
-//   endDate?: string;
-// }
-
-
-
 import { 
   IsNumber, 
   IsOptional, 

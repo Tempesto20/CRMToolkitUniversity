@@ -277,6 +277,71 @@
   }
 }
 
+
+
+
+// Добавьте эти стили в существующий файл
+.upcomingLeaveBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+.statusContainer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.leaveStatsTag {
+  background-color: #e6f7ff;
+  border-color: #91d5ff;
+  color: #1890ff;
+}
+
+.upcomingLeaveInfo {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #f9f0ff;
+  border: 1px solid #d3adf7;
+  border-radius: 6px;
+  
+  .leaveTitle {
+    color: #722ed1;
+    margin-bottom: 8px;
+  }
+}
+
+.leaveDetails {
+  .leaveDetail {
+    margin: 4px 0;
+    
+    strong {
+      color: #595959;
+      margin-right: 8px;
+    }
+  }
+}
+
+// Стиль для карточки сотрудника в отпуске
+.onLeaveCard {
+  border-left: 4px solid #fa8c16;
+  background-color: #fff7e6;
+}
+
+// Стиль для карточки с предстоящим отпуском
+:global {
+  .ant-tag-purple {
+    background-color: #f9f0ff;
+    border-color: #d3adf7;
+    color: #722ed1;
+  }
+}
+
+
+
 // Адаптивность
 @media (max-width: 768px) {
   .employeeCard {

@@ -13,31 +13,39 @@ import {
   CheckCircleOutlined,
   CheckOutlined,
   CloseOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
+  CalendarOutlined
 } from '@ant-design/icons';
 import { Employee as EmployeeType } from '../../redux/slices/employeesSlice';
 import styles from './EmployeeCard.module.scss';
 
-// Интерфейс для отпусков
+// Интерфейсы для отпусков
 interface Leave {
-  leave_id: number;
-  employee_personal_number: number;
-  leave_type_id: number;
-  start_date: string;
-  end_date: string;
-  leave_type_name?: string;
+  leaveId: number;
+  employee: {
+    personalNumber: number;
+    fullName: string;
+    position?: string;
+  } | null;
+  leaveType: {
+    leaveTypeId: number;
+    leaveTypeName: string;
+    description?: string;
+  } | null;
+  startDate: string;
+  endDate: string;
 }
 
-interface LeaveType {
-  leave_type_id: number;
-  leave_type_name: string;
-  description: string;
+interface LeaveTypeData {
+  leaveTypeId: number;
+  leaveTypeName: string;
+  description?: string;
 }
 
 interface EmployeeCardProps {
   employee: EmployeeType;
   leaves: Leave[];
-  leaveTypes: LeaveType[];
+  leaveTypes: LeaveTypeData[];
   onEdit: (employee: EmployeeType) => void;
   onDelete: (personalNumber: number, fullName: string) => void;
   isExactMatch?: boolean;
@@ -68,58 +76,125 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
     return date.toLocaleDateString('ru-RU');
   };
 
-  // Функция для проверки, находится ли сотрудник в отпуске
-  const isOnLeave = () => {
+  // Улучшенная функция для проверки отпуска (по аналогии с LeavesManager)
+  const getCurrentLeaveInfo = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    // Находим все отпуска сотрудника (с проверкой на null)
     const employeeLeaves = leaves.filter(leave => 
-      leave.employee_personal_number === employee.personalNumber
+      leave.employee && leave.employee.personalNumber === employee.personalNumber
     );
     
+    // Проверяем каждый отпуск на соответствие текущей дате
     for (const leave of employeeLeaves) {
-      const startDate = new Date(leave.start_date);
-      const endDate = new Date(leave.end_date);
+      const startDate = new Date(leave.startDate);
+      const endDate = new Date(leave.endDate);
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 999);
       
       if (today >= startDate && today <= endDate) {
         return {
           isOnLeave: true,
-          leaveType: leave.leave_type_name || 'Отпуск',
-          endDate: leave.end_date
+          leaveId: leave.leaveId,
+          leaveType: leave.leaveType,
+          startDate: leave.startDate,
+          endDate: leave.endDate
         };
       }
     }
     
+    // Проверяем будущие отпуски
+    const upcomingLeaves = employeeLeaves.filter(leave => {
+      const startDate = new Date(leave.startDate);
+      return startDate > today;
+    });
+    
+    if (upcomingLeaves.length > 0) {
+      // Сортируем по дате начала и берем ближайший
+      upcomingLeaves.sort((a, b) => 
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+      const nextLeave = upcomingLeaves[0];
+      
+      return {
+        isOnLeave: false,
+        hasUpcomingLeave: true,
+        nextLeave: {
+          leaveId: nextLeave.leaveId,
+          leaveType: nextLeave.leaveType,
+          startDate: nextLeave.startDate,
+          endDate: nextLeave.endDate
+        }
+      };
+    }
+    
     return { 
       isOnLeave: false,
-      leaveType: undefined,
-      endDate: undefined
+      hasUpcomingLeave: false
     };
   };
 
-  const leaveInfo = isOnLeave();
+  const leaveInfo = getCurrentLeaveInfo();
 
-  // Получить текущий тип отпуска
-  const getCurrentLeaveType = () => {
-    if (leaveInfo.isOnLeave && leaveInfo.leaveType) {
-      return leaveTypes.find(type => type.leave_type_name === leaveInfo.leaveType);
+  // Рассчитать количество дней отпуска
+  const calculateLeaveDays = (startDateStr: string, endDateStr: string) => {
+    try {
+      const startDate = new Date(startDateStr);
+      const endDate = new Date(endDateStr);
+      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    } catch (e) {
+      return 0;
     }
-    return null;
   };
 
-  const currentLeaveType = getCurrentLeaveType();
-
-  // Форматирование даты окончания отпуска
-  const formatEndDate = (dateString?: string) => {
-    if (!dateString) return 'Не указана';
+  // Форматирование дат
+  const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('ru-RU');
+      return new Date(dateString).toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
     } catch (e) {
       return 'Неверный формат даты';
     }
   };
+
+  // Форматирование даты в кратком формате
+  const formatShortDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('ru-RU');
+    } catch (e) {
+      return 'Неверная дата';
+    }
+  };
+
+  // Получить статистику по отпускам сотрудника
+  const getEmployeeLeaveStats = () => {
+    const employeeLeaves = leaves.filter(leave => 
+      leave.employee && leave.employee.personalNumber === employee.personalNumber
+    );
+    
+    const totalLeaves = employeeLeaves.length;
+    const currentYear = new Date().getFullYear();
+    const currentYearLeaves = employeeLeaves.filter(leave => {
+      try {
+        const leaveDate = new Date(leave.startDate);
+        return leaveDate.getFullYear() === currentYear;
+      } catch (e) {
+        return false;
+      }
+    });
+    
+    return {
+      total: totalLeaves,
+      currentYear: currentYearLeaves.length
+    };
+  };
+
+  const leaveStats = getEmployeeLeaveStats();
 
   return (
     <div className={`${styles.employeeCard} ${leaveInfo.isOnLeave ? styles.onLeaveCard : ''} ${isExactMatch ? styles.exactMatchCard : ''}`}>
@@ -137,6 +212,15 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
         <div className={styles.leaveBadge}>
           <Tag color="orange" icon={<HomeOutlined />}>
             В отпуске
+          </Tag>
+        </div>
+      )}
+      
+      {/* Бейдж для предстоящего отпуска */}
+      {leaveInfo.hasUpcomingLeave && !leaveInfo.isOnLeave && (
+        <div className={styles.upcomingLeaveBadge}>
+          <Tag color="purple" icon={<CalendarOutlined />}>
+            Ближайший отпуск: {formatShortDate(leaveInfo.nextLeave!.startDate)}
           </Tag>
         </div>
       )}
@@ -174,15 +258,28 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
       <div className={styles.employeeInfo}>
         <div className={styles.employeeHeader}>
           <h3 className={styles.employeeName}>{employee.fullName}</h3>
-          {leaveInfo.isOnLeave ? (
-            <Tag color="orange" icon={<HomeOutlined />} className={styles.statusTag}>
-              {currentLeaveType?.leave_type_name || 'В отпуске'}
-            </Tag>
-          ) : (
-            <Tag color="green" icon={<CheckCircleOutlined />} className={styles.statusTag}>
-              Работает
-            </Tag>
-          )}
+          <div className={styles.statusContainer}>
+            {leaveInfo.isOnLeave ? (
+              <Tag color="orange" icon={<HomeOutlined />} className={styles.statusTag}>
+                {leaveInfo.leaveType?.leaveTypeName || 'В отпуске'}
+              </Tag>
+            ) : leaveInfo.hasUpcomingLeave ? (
+              <Tag color="purple" icon={<CalendarOutlined />} className={styles.statusTag}>
+                Отпуск с {formatShortDate(leaveInfo.nextLeave!.startDate)}
+              </Tag>
+            ) : (
+              <Tag color="green" icon={<CheckCircleOutlined />} className={styles.statusTag}>
+                Работает
+              </Tag>
+            )}
+            
+            {/* Статистика отпусков */}
+            {leaveStats.total > 0 && (
+              <Tag color="blue" className={styles.leaveStatsTag}>
+                Отпусков: {leaveStats.total} ({leaveStats.currentYear} в этом году)
+              </Tag>
+            )}
+          </div>
         </div>
         
         <div className={styles.employeeDetails}>
@@ -320,22 +417,77 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
             </div>
           </div>
           
-          {/* Информация об отпуске (если сотрудник в отпуске) */}
+          {/* Информация об отпуске */}
           {leaveInfo.isOnLeave && (
             <div className={styles.leaveInfo}>
-              <h4 className={styles.leaveTitle}>Информация об отпуске:</h4>
+              <h4 className={styles.leaveTitle}>
+                <HomeOutlined /> Текущий отпуск
+              </h4>
               <div className={styles.leaveDetails}>
-                <p className={styles.leaveDetail}>
-                  <strong>Тип отпуска:</strong> {currentLeaveType?.leave_type_name || 'Не указан'}
-                </p>
-                <p className={styles.leaveDetail}>
-                  <strong>Дата окончания:</strong> {formatEndDate(leaveInfo.endDate)}
-                </p>
-                {currentLeaveType?.description && (
-                  <p className={styles.leaveDetail}>
-                    <strong>Описание:</strong> {currentLeaveType.description}
-                  </p>
-                )}
+                <Row gutter={[16, 8]}>
+                  <Col span={12}>
+                    <p className={styles.leaveDetail}>
+                      <strong>Тип отпуска:</strong> {leaveInfo.leaveType?.leaveTypeName || 'Не указан'}
+                    </p>
+                  </Col>
+                  <Col span={12}>
+                    <p className={styles.leaveDetail}>
+                      <strong>Продолжительность:</strong> 
+                      {calculateLeaveDays(leaveInfo.startDate!, leaveInfo.endDate!)} дней
+                    </p>
+                  </Col>
+                  <Col span={12}>
+                    <p className={styles.leaveDetail}>
+                      <strong>Дата начала:</strong> {formatDate(leaveInfo.startDate!)}
+                    </p>
+                  </Col>
+                  <Col span={12}>
+                    <p className={styles.leaveDetail}>
+                      <strong>Дата окончания:</strong> {formatDate(leaveInfo.endDate!)}
+                    </p>
+                  </Col>
+                  {leaveInfo.leaveType?.description && (
+                    <Col span={24}>
+                      <p className={styles.leaveDetail}>
+                        <strong>Описание:</strong> {leaveInfo.leaveType.description}
+                      </p>
+                    </Col>
+                  )}
+                </Row>
+              </div>
+            </div>
+          )}
+          
+          {/* Информация о предстоящем отпуске */}
+          {leaveInfo.hasUpcomingLeave && !leaveInfo.isOnLeave && (
+            <div className={styles.upcomingLeaveInfo}>
+              <h4 className={styles.leaveTitle}>
+                <CalendarOutlined /> Ближайший отпуск
+              </h4>
+              <div className={styles.leaveDetails}>
+                <Row gutter={[16, 8]}>
+                  <Col span={12}>
+                    <p className={styles.leaveDetail}>
+                      <strong>Тип отпуска:</strong> {leaveInfo.nextLeave?.leaveType?.leaveTypeName || 'Не указан'}
+                    </p>
+                  </Col>
+                  <Col span={12}>
+                    <p className={styles.leaveDetail}>
+                      <strong>Продолжительность:</strong> 
+                      {calculateLeaveDays(leaveInfo.nextLeave!.startDate, leaveInfo.nextLeave!.endDate)} дней
+                    </p>
+                  </Col>
+                  <Col span={12}>
+                    <p className={styles.leaveDetail}>
+                      <strong>Дата начала:</strong> {formatDate(leaveInfo.nextLeave!.startDate)}
+                    </p>
+                  </Col>
+                  <Col span={12}>
+                    <p className={styles.leaveDetail}>
+                      <strong>Дата окончания:</strong> {formatDate(leaveInfo.nextLeave!.endDate)}
+                    </p>
+                  </Col>
+                </Row>
               </div>
             </div>
           )}

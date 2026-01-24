@@ -44,20 +44,28 @@ import EditEmployeeModal from './modals/EditEmployeeModal';
 
 const { Search } = Input;
 
-// Интерфейс для отпусков
+// Интерфейсы для отпусков (обновленные)
 interface Leave {
-  leave_id: number;
-  employee_personal_number: number;
-  leave_type_id: number;
-  start_date: string;
-  end_date: string;
-  leave_type_name?: string;
+  leaveId: number;
+  employee: {
+    personalNumber: number;
+    fullName: string;
+    position?: string;
+  } | null;
+  leaveType: {
+    leaveTypeId: number;
+    leaveTypeName: string;
+    description?: string;
+  } | null;
+  startDate: string;
+  endDate: string;
 }
 
-interface LeaveType {
-  leave_type_id: number;
-  leave_type_name: string;
-  description: string;
+// Переименуем интерфейс для типов отпусков, чтобы избежать конфликта
+interface LeaveTypeData {
+  leaveTypeId: number;
+  leaveTypeName: string;
+  description?: string;
 }
 
 const EmployeesManager: React.FC = () => {
@@ -81,7 +89,7 @@ const EmployeesManager: React.FC = () => {
   const [employeeToDelete, setEmployeeToDelete] = useState<{ number: number; name: string } | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeType | null>(null);
   const [leaves, setLeaves] = useState<Leave[]>([]);
-  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
+  const [leaveTypes, setLeaveTypes] = useState<LeaveTypeData[]>([]);
   const [loadingLeaves, setLoadingLeaves] = useState(false);
   const [displayedEmployees, setDisplayedEmployees] = useState<EmployeeType[]>([]);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -276,11 +284,11 @@ const EmployeesManager: React.FC = () => {
   }, [dispatch, employeeToDelete]);
 
   const handleEditClick = useCallback((employee: EmployeeType) => {
-  console.log('=== EDIT EMPLOYEE CLICKED ===');
-  console.log('Full employee object:', JSON.stringify(employee, null, 2));
-  console.log('Employee has serviceTypeId?', employee.serviceTypeId);
-  console.log('Employee has serviceType?', employee.serviceType);
-  console.log('Employee keys:', Object.keys(employee));
+    console.log('=== EDIT EMPLOYEE CLICKED ===');
+    console.log('Full employee object:', JSON.stringify(employee, null, 2));
+    console.log('Employee has serviceTypeId?', employee.serviceTypeId);
+    console.log('Employee has serviceType?', employee.serviceType);
+    console.log('Employee keys:', Object.keys(employee));
     setEditingEmployee(employee);
     setEditModal(true);
   }, []);
@@ -304,39 +312,40 @@ const EmployeesManager: React.FC = () => {
   };
 
   // Функция для подсчета сотрудников в отпуске и работающих
-  const getLeaveStats = () => {
-    if (!leavesLoaded || leaves.length === 0) {
-      return { onLeaveCount: 0, workingCount: employees.length };
-    }
+const getLeaveStats = () => {
+  if (!leavesLoaded || leaves.length === 0) {
+    return { onLeaveCount: 0, workingCount: employees.length };
+  }
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  let onLeaveCount = 0;
+  
+  employees.forEach(employee => {
+    // Фильтруем отпуска, где employee не null
+    const employeeLeaves = leaves.filter(leave => 
+      leave.employee && leave.employee.personalNumber === employee.personalNumber
+    );
     
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    let onLeaveCount = 0;
-    
-    employees.forEach(employee => {
-      const employeeLeaves = leaves.filter(leave => 
-        leave.employee_personal_number === employee.personalNumber
-      );
+    for (const leave of employeeLeaves) {
+      const startDate = new Date(leave.startDate);
+      const endDate = new Date(leave.endDate);
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
       
-      for (const leave of employeeLeaves) {
-        const startDate = new Date(leave.start_date);
-        const endDate = new Date(leave.end_date);
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setHours(23, 59, 59, 999);
-        
-        if (today >= startDate && today <= endDate) {
-          onLeaveCount++;
-          break;
-        }
+      if (today >= startDate && today <= endDate) {
+        onLeaveCount++;
+        break;
       }
-    });
-    
-    return { 
-      onLeaveCount, 
-      workingCount: employees.length - onLeaveCount 
-    };
+    }
+  });
+  
+  return { 
+    onLeaveCount, 
+    workingCount: employees.length - onLeaveCount 
   };
+};
 
   const leaveStats = getLeaveStats();
 
