@@ -10,6 +10,9 @@ import {
   fetchLocationWorksWithStats
 } from '../../redux/slices/locationWorkSlice';
 import { RootState, AppDispatch } from '../../redux/store';
+import LocationCard from './LocationCard';
+import AddLocationModal from './modals/AddLocationModal';
+import EditLocationModal from './modals/EditLocationModal';
 import styles from './LocationWorkManager.module.scss';
 
 interface FormData {
@@ -35,7 +38,8 @@ const LocationWorksManager: React.FC = () => {
     error
   } = useSelector((state: RootState) => state.locationWork);
 
-  const [openDialog, setOpenDialog] = useState(false);
+  const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
@@ -60,23 +64,27 @@ const LocationWorksManager: React.FC = () => {
     }
   }, [searchQuery, dispatch]);
 
-  const handleOpenDialog = (location?: any) => {
-    if (location) {
-      setSelectedLocation(location);
-      setFormData({
-        locationName: location.locationName || ''
-      });
-    } else {
-      setSelectedLocation(null);
-      setFormData({
-        locationName: ''
-      });
-    }
-    setOpenDialog(true);
+  const handleOpenAddDialog = () => {
+    setFormData({
+      locationName: ''
+    });
+    setOpenAddDialog(true);
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
+  const handleOpenEditDialog = (location: any) => {
+    setSelectedLocation(location);
+    setFormData({
+      locationName: location.locationName || ''
+    });
+    setOpenEditDialog(true);
+  };
+
+  const handleCloseAddDialog = () => {
+    setOpenAddDialog(false);
+  };
+
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false);
     setSelectedLocation(null);
   };
 
@@ -88,16 +96,19 @@ const LocationWorksManager: React.FC = () => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleAddSubmit = () => {
+    dispatch(createLocationWork(formData.locationName));
+    handleCloseAddDialog();
+  };
+
+  const handleEditSubmit = () => {
     if (selectedLocation) {
       dispatch(updateLocationWork({
         id: selectedLocation.locationId,
         locationName: formData.locationName
       }));
-    } else {
-      dispatch(createLocationWork(formData.locationName));
     }
-    handleCloseDialog();
+    handleCloseEditDialog();
   };
 
   const handleOpenDeleteDialog = (locationId: number, locationName: string) => {
@@ -124,8 +135,6 @@ const LocationWorksManager: React.FC = () => {
   };
 
   // Преобразуем данные в единый формат с сортировкой по locationId
-
-
   const getDisplayData = (): LocationWithStats[] => {
     let data: LocationWithStats[] = [];
     
@@ -150,7 +159,6 @@ const LocationWorksManager: React.FC = () => {
     // СОРТИРОВКА ПО locationId ОТ МЕНЬШЕГО К БОЛЬШЕМУ
     return data.sort((a, b) => a.locationId - b.locationId);
   };
-
 
   const displayData = getDisplayData();
   
@@ -235,7 +243,7 @@ const LocationWorksManager: React.FC = () => {
             Обновить
           </button>
           <button
-            onClick={() => handleOpenDialog()}
+            onClick={handleOpenAddDialog}
             className={`${styles.btn} ${styles.btnPrimary}`}
           >
             <span className={styles.addIcon}>+</span>
@@ -317,55 +325,14 @@ const LocationWorksManager: React.FC = () => {
 
       {/* Карточки районов */}
       <div className={styles.cardsContainer}>
-        {displayLocations.map((location: LocationWithStats) => {
-          // Получаем количество локомотивов
-          let locomotiveCount = 0;
-          
-          if (location.locomotivecount !== undefined) {
-            locomotiveCount = typeof location.locomotivecount === 'string'
-              ? parseInt(location.locomotivecount) || 0
-              : Number(location.locomotivecount) || 0;
-          } else if (location.locomotives) {
-            locomotiveCount = location.locomotives.length;
-          }
-
-          return (
-            <div key={location.locationId} className={styles.locationCard}>
-              <div className={styles.cardHeader}>
-                <h3 className={styles.cardTitle}>{location.locationName}</h3>
-                <span className={styles.cardId}>ID: {location.locationId}</span>
-              </div>
-              
-              <div className={styles.cardContent}>
-                <div className={styles.simpleStats}>
-                  <div className={styles.statItemSingle}>
-                    <span className={styles.statLabel}>Локомотивов в районе:</span>
-                    <span className={styles.statValue}>
-                      {locomotiveCount}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.cardActions}>
-                <button
-                  onClick={() => handleOpenDialog(location)}
-                  className={`${styles.btn} ${styles.btnEdit}`}
-                >
-                  <span className={styles.actionIcon}>✏️</span>
-                  Редактировать
-                </button>
-                <button
-                  onClick={() => handleOpenDeleteDialog(location.locationId, location.locationName)}
-                  className={`${styles.btn} ${styles.btnDelete}`}
-                >
-                  <span className={styles.actionIcon}>🗑️</span>
-                  Удалить
-                </button>
-              </div>
-            </div>
-          );
-        })}
+        {displayLocations.map((location: LocationWithStats) => (
+          <LocationCard
+            key={location.locationId}
+            location={location}
+            onEdit={handleOpenEditDialog}
+            onDelete={handleOpenDeleteDialog}
+          />
+        ))}
       </div>
 
       {/* Сообщение если нет данных */}
@@ -377,60 +344,25 @@ const LocationWorksManager: React.FC = () => {
         </div>
       )}
 
-      {/* Модальное окно добавления/редактирования */}
-      {openDialog && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <div className={styles.modalHeader}>
-              <h2>{selectedLocation ? 'Редактирование района' : 'Добавление района'}</h2>
-              <button onClick={handleCloseDialog} className={styles.closeButton}>×</button>
-            </div>
-            
-            <div className={styles.form}>
-              {selectedLocation && (
-                <div className={styles.formGroup}>
-                  <label>ID района:</label>
-                  <div className={styles.idDisplay}>
-                    <span className={styles.idValue}>{selectedLocation.locationId}</span>
-                    <small className={styles.helperText}>ID присваивается автоматически и не может быть изменен</small>
-                  </div>
-                </div>
-              )}
-              
-              <div className={styles.formGroup}>
-                <label>Название района (location_name): *</label>
-                <input
-                  type="text"
-                  name="locationName"
-                  value={formData.locationName}
-                  onChange={handleInputChange}
-                  required
-                  className={styles.input}
-                  placeholder="Введите название района"
-                />
-              </div>
-              
-              <div className={styles.formActions}>
-                <button
-                  type="button"
-                  onClick={handleCloseDialog}
-                  className={styles.cancelButton}
-                >
-                  Отмена
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  className={styles.submitButton}
-                  disabled={!formData.locationName.trim()}
-                >
-                  {selectedLocation ? 'Сохранить изменения' : 'Добавить район'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Модальные окна */}
+      <AddLocationModal
+        open={openAddDialog}
+        onClose={handleCloseAddDialog}
+        onSubmit={handleAddSubmit}
+        formData={formData}
+        onInputChange={handleInputChange}
+        loading={status === 'loading'}
+      />
+
+      <EditLocationModal
+        open={openEditDialog}
+        onClose={handleCloseEditDialog}
+        onSubmit={handleEditSubmit}
+        selectedLocation={selectedLocation}
+        formData={formData}
+        onInputChange={handleInputChange}
+        loading={status === 'loading'}
+      />
 
       {/* Модальное окно подтверждения удаления */}
       {openDeleteDialog && (

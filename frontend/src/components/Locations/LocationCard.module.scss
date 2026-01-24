@@ -1,0 +1,124 @@
+.locationCard {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.cardHeader {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  color: white;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cardTitle {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.cardId {
+  font-size: 12px;
+  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.cardContent {
+  padding: 20px;
+  flex-grow: 1;
+}
+
+.simpleStats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80px;
+}
+
+.statItemSingle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 24px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  border: 2px solid #91d5ff;
+  min-width: 200px;
+}
+
+.statLabel {
+  font-size: 14px;
+  color: #1890ff;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.statValue {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1890ff;
+}
+
+.cardActions {
+  display: flex;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+
+  .btn {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.btnEdit {
+  background: #52c41a;
+  color: white;
+
+  &:hover {
+    background: #73d13d;
+  }
+}
+
+.btnDelete {
+  background: #ff4d4f;
+  color: white;
+
+  &:hover {
+    background: #ff7875;
+  }
+}
+
+.actionIcon {
+  font-size: 16px;
+}
