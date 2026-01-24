@@ -14,6 +14,7 @@ const Header: React.FC = () => {
     { path: '/locomotives', label: 'Локомотивы', icon: '🚂' },
     { path: '/leaves', label: 'Отпуска', icon: '📅' },
     { path: '/location-works', label: 'Районы работы', icon: '📍' },
+    { path: '/dispatch-plan', label: 'Раскрепление', icon: '➕' },
   ];
 
   return (

@@ -8,6 +8,7 @@ import EmployeesManager from './components/Employees/EmployeesManager';
 import LocomotivesManager from './components/Locomotives/LocomotivesManager';
 import LeavesManager from './components/Leaves/LeavesManager';
 import LocationWorkManager from './components/Locations/LocationWorkManager';
+import DispatchPlan from './components/DispatchPlan';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/locomotives" element={<LocomotivesManager />} />
             <Route path="/leaves" element={<LeavesManager />} />
             <Route path="/location-works" element={<LocationWorkManager />} />
+            <Route path="/dispatch-plan" element={<DispatchPlan />} />
           </Routes>
         </Layout>
       </Router>

@@ -1,4 +1,4 @@
-// frontend/src/redux/slices/employeesSlice.ts
+// src/redux/slices/employeesSlice.ts
 import axios from 'axios';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
@@ -63,9 +63,19 @@ export const fetchLocomotives = createAsyncThunk(
 
 export const fetchAllEmployees = createAsyncThunk(
   'employees/fetchAllEmployeesStatus',
-  async () => {
-    const { data } = await axios.get(`${API_BASE_URL}/api/employees`);
-    return data as any[];
+  async (searchQuery?: string) => {
+    try {
+      const url = searchQuery 
+        ? `${API_BASE_URL}/api/employees?search=${encodeURIComponent(searchQuery)}`
+        : `${API_BASE_URL}/api/employees`;
+      
+      console.log('Fetching employees from:', url);
+      const { data } = await axios.get(url);
+      return data as any[];
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      throw error;
+    }
   }
 );
 
@@ -138,6 +148,7 @@ interface EmployeesState {
   error: string | null;
   successMessage: string | null;
   deleteStatus: 'idle' | 'loading' | 'success' | 'error';
+  searchQuery: string; // ДОБАВИМ ПОЛЕ ДЛЯ ПОИСКА
 }
 
 const initialState: EmployeesState = {
@@ -151,6 +162,7 @@ const initialState: EmployeesState = {
   error: null,
   successMessage: null,
   deleteStatus: 'idle',
+  searchQuery: '', // ДОБАВИМ ПОЛЕ ДЛЯ ПОИСКА
 };
 
 const employeesSlice = createSlice({
@@ -178,6 +190,10 @@ const employeesSlice = createSlice({
       });
       state.positions = Array.from(positionsSet).sort();
     },
+    // ДОБАВИМ РЕДЬЮСЕР ДЛЯ ПОИСКА
+    setSearchQuery: (state, action: { payload: string }) => {
+      state.searchQuery = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -189,7 +205,8 @@ const employeesSlice = createSlice({
       })
       .addCase(createEmployee.fulfilled, (state, action) => {
         state.status = 'success';
-        state.employees.push(action.payload as any);
+        // Добавляем нового сотрудника в начало списка
+        state.employees.unshift(action.payload as any);
         state.successMessage = 'Сотрудник успешно добавлен!';
         
         const newEmployee = action.payload as Employee;
@@ -277,7 +294,7 @@ const employeesSlice = createSlice({
         state.locomotives = [];
       })
       
-      // Загрузка всех сотрудников
+      // Загрузка всех сотрудников (с поддержкой поиска)
       .addCase(fetchAllEmployees.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -324,6 +341,7 @@ export const {
   clearSuccessMessage, 
   resetStatus, 
   resetDeleteStatus,
-  extractPositionsFromEmployees 
+  extractPositionsFromEmployees,
+  setSearchQuery // ДОБАВИМ ЭКСПОРТ
 } = employeesSlice.actions;
 export default employeesSlice.reducer;

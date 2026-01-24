@@ -129,6 +129,7 @@ import locomotivesReducer from './slices/locomotivesSlice';
 import locationWorkReducer from './slices/locationWorkSlice';
 import leaveTypesReducer from './slices/leaveTypesSlice';
 import leavesReducer from './slices/leavesSlice';
+import dispatchPlanReducer from './slices/dispatchPlanSlice';
 
 export const store = configureStore({
   reducer: {
@@ -140,6 +141,7 @@ export const store = configureStore({
     locationWork: locationWorkReducer,
     leaveTypes: leaveTypesReducer,
     leaves: leavesReducer,
+    dispatchPlan: dispatchPlanReducer,
   },
 });
 
