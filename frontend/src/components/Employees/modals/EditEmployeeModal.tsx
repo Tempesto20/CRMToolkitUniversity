@@ -62,7 +62,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Функция сортировки локомотивов от меньшего к большему (0-100)
+  // Функция сортировки локомотивов от меньшего к большему 
   const sortLocomotives = (locos: any[]): any[] => {
     return [...locos].sort((a, b) => {
       // Извлекаем числовую часть из locomotiveId

@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './AddLeavesModal.module.scss';
 
-// альтернатива импорта из leavesSlice.ts
+
 interface Employee {
   personalNumber: number;
   fullName: string;

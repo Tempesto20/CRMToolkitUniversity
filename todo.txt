@@ -9,7 +9,7 @@ BACKEND
 npx @nestjs/cli new cats-market-backend
 cd cats-market-backend
 
-# Установка зависимостей для PostgreSQL и TypeORM
+# Установка зависимостей для PostgreSql и TypeORM
 npm install @nestjs/typeorm typeorm pg
 npm install @nestjs/config
 npm install class-validator class-transformer
@@ -50,3 +50,8 @@ npm install @types/react-redux
 
 # Дополнительные зависимости для асинхронных операций (обычно уже включены в RTK)
 npm install redux-thunk
+
+
+
+
+

@@ -136,7 +136,7 @@ export class LocomotivesService {
       locomotive.locomotiveName = updateLocomotiveDto.locomotiveName;
     }
 
-    // Обновление связей - ЗАМЕНИТЕ ЭТОТ БЛОК КОДА:
+    // Обновление связей:
     if (updateLocomotiveDto.locationId !== undefined) {
       if (updateLocomotiveDto.locationId) {
         const location = await this.locationWorkRepository.findOne({

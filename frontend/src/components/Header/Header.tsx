@@ -8,7 +8,6 @@ const Header: React.FC = () => {
 
   const navigationLinks = [
     { path: '/', label: 'Главная', icon: '🏠' },
-    // { path: '/add-employee', label: 'Добавить сотрудника', icon: '➕' },
     { path: '/employees', label: 'Сотрудники', icon: '👥' },
     { path: '/locomotives', label: 'Локомотивы', icon: '🚂' },
     { path: '/leaves', label: 'Отпуска', icon: '📅' },

@@ -44,7 +44,7 @@ import EditEmployeeModal from './modals/EditEmployeeModal';
 
 const { Search } = Input;
 
-// Интерфейсы для отпусков (обновленные)
+// Интерфейсы для отпусков 
 interface Leave {
   leaveId: number;
   employee: {
