@@ -7,6 +7,11 @@ import {
   fetchWorkTypesByService 
 } from '../../../redux/slices/employeesSlice';
 
+
+
+
+
+
 interface AddEmployeeModalProps {
   visible: boolean;
   onCancel: () => void;
@@ -32,6 +37,11 @@ interface FormData {
   locomotiveId: string;
   birthday: string;
 }
+
+
+
+
+
 
 const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   visible,
@@ -64,6 +74,14 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Валидация только буквы, пробелы и дефисы
+  const validateOnlyLetters = (value: string): boolean => {
+    return /^[а-яА-ЯёЁa-zA-Z\s\-]*$/.test(value);
+  };
+
+
+
+
   // Функция сортировки локомотивов от меньшего к большему (0-100)
   const sortLocomotives = (locos: any[]): any[] => {
     return [...locos].sort((a, b) => {
@@ -87,6 +105,10 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     });
   };
 
+
+
+
+
   // Функция форматирования отображения локомотива
   const formatLocomotiveDisplay = (locomotive: any): string => {
     if (!locomotive) return '';
@@ -100,6 +122,10 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     
     return id;
   };
+
+
+
+
 
   // Сброс формы при закрытии
   useEffect(() => {
@@ -130,6 +156,9 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     setErrors({});
   };
 
+
+
+
   const loadWorkTypes = async (serviceTypeId: number) => {
     try {
       setLoading(true);
@@ -144,6 +173,10 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       setLoading(false);
     }
   };
+
+
+
+
 
   const handleServiceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -160,6 +193,9 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       setWorkTypes([]);
     }
   };
+
+
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -182,6 +218,14 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         }
       }
       
+      // Валидация для ФИО (только буквы)
+      if (name === 'fullName') {
+        if (value && !validateOnlyLetters(value)) {
+          setErrors(prev => ({ ...prev, fullName: 'Только буквы, пробелы и дефисы' }));
+          return;
+        }
+      }
+      
       // Валидация для ID локомотива
       if (name === 'locomotiveId' && value && !/^[a-zA-Z0-9\-_]*$/.test(value)) {
         setErrors(prev => ({ ...prev, locomotiveId: 'Только буквы, цифры, дефисы и подчеркивания' }));
@@ -194,6 +238,11 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       });
     }
   };
+
+
+
+
+
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -219,11 +268,17 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     }
   };
 
+
+
+
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.fullName.trim()) {
       newErrors.fullName = 'Введите ФИО сотрудника';
+    } else if (!validateOnlyLetters(formData.fullName)) {
+      newErrors.fullName = 'Только буквы, пробелы и дефисы';
     }
     
     if (!formData.personalNumber.trim()) {
@@ -252,6 +307,9 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -270,6 +328,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
           formDataToSend.append(key, value.toString());
         }
       });
+
       
       // Особые обработки
       if (formData.birthday) {
@@ -329,8 +388,13 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
   if (!visible) return null;
 
+
   // Сортируем локомотивы
   const sortedLocomotives = sortLocomotives(locomotives);
+
+
+
+  
 
   return (
     <div className={styles.modalOverlay}>
@@ -367,6 +431,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               {errors.fullName && (
                 <div className={styles.errorText}>{errors.fullName}</div>
               )}
+              <small className={styles.helperText}>Только буквы, пробелы и дефисы</small>
             </div>
             
             {/* Личный номер */}

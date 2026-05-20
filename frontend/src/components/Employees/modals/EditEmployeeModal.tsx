@@ -1,9 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import styles from './EditEmployeeModal.module.scss';
 import { AppDispatch } from '../../../redux/store';
 import { updateEmployee, fetchWorkTypesByService } from '../../../redux/slices/employeesSlice';
+
+
+
+
+
 
 interface EditEmployeeModalProps {
   visible: boolean;
@@ -30,6 +34,10 @@ interface FormData {
   locomotiveId: string;
   birthday: string;
 }
+
+
+
+
 
 const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   visible,
@@ -61,6 +69,12 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   const [employeePhoto, setEmployeePhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Валидация только буквы, пробелы и дефисы
+  const validateOnlyLetters = (value: string): boolean => {
+    return /^[а-яА-ЯёЁa-zA-Z\s\-]*$/.test(value);
+  };
 
   // Функция сортировки локомотивов от меньшего к большему 
   const sortLocomotives = (locos: any[]): any[] => {
@@ -92,6 +106,9 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     });
   };
 
+
+
+
   // Функция форматирования отображения локомотива
   const formatLocomotiveDisplay = (locomotive: any): string => {
     if (!locomotive) return '';
@@ -105,6 +122,10 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     
     return id;
   };
+
+
+
+
 
   // Функция для получения значения из различных возможных путей данных
   const getEmployeeValue = (employee: any, path: string, altPaths: string[] = []): any => {
@@ -132,6 +153,10 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     
     return null;
   };
+
+
+
+
 
   // Инициализация формы
   useEffect(() => {
@@ -178,6 +203,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       
       setFormData(initialData);
       
+
       // Загружаем фото
       if (editingEmployee.photoFilename) {
         setPhotoPreview(`http://localhost:3000/api/employees/photo/${editingEmployee.personalNumber}`);
@@ -192,6 +218,9 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       
       setIsInitialized(true);
     }
+
+
+
     
     // Сброс при закрытии модалки
     if (!visible) {
@@ -213,8 +242,13 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       setWorkTypes([]);
       setEmployeePhoto(null);
       setPhotoPreview(null);
+      setErrors({});
     }
   }, [visible, editingEmployee]);
+
+
+
+
 
   const loadWorkTypes = async (serviceTypeId: number) => {
     try {
@@ -251,6 +285,9 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     }
   };
 
+
+
+
   const handleServiceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setFormData({
@@ -266,8 +303,14 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     }
   };
 
+
+
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    
+    // Очищаем ошибку при изменении поля
+    setErrors(prev => ({ ...prev, [name]: '' }));
     
     if (type === 'checkbox') {
       const checkbox = e.target as HTMLInputElement;
@@ -276,12 +319,23 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         [name]: checkbox.checked
       });
     } else {
+      // Валидация для ФИО (только буквы)
+      if (name === 'fullName') {
+        if (value && !validateOnlyLetters(value)) {
+          setErrors(prev => ({ ...prev, fullName: 'Только буквы, пробелы и дефисы' }));
+          return;
+        }
+      }
+      
       setFormData({
         ...formData,
         [name]: value
       });
     }
   };
+
+
+
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -306,8 +360,31 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     }
   };
 
+
+
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = 'Введите ФИО сотрудника';
+    } else if (!validateOnlyLetters(formData.fullName)) {
+      newErrors.fullName = 'Только буквы, пробелы и дефисы';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
     
     if (!editingEmployee) return;
     
@@ -344,19 +421,24 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       
       onCancel();
       refreshEmployees();
-      alert('Сотрудник успешно обновлен!');
+      alert('Данные сотрудника успешно обновлены!');
     } catch (err: any) {
       console.error('Error updating employee:', err);
-      alert(err.response?.data?.message || 'Ошибка при обновлении сотрудника');
+      alert(err.response?.data?.message || 'Ошибка при обновлении данных сотрудника');
     } finally {
       setLoading(false);
     }
   };
 
+
   if (!visible) return null;
+
 
   // Сортируем локомотивы
   const sortedLocomotives = sortLocomotives(locomotives);
+
+
+  
 
   return (
     <div className={styles.modalOverlay}>
@@ -493,9 +575,13 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                 onChange={handleChange}
                 required
                 placeholder="Введите полное имя"
-                className={styles.input}
+                className={`${styles.input} ${errors.fullName ? styles.inputError : ''}`}
                 disabled={loading}
               />
+              {errors.fullName && (
+                <div className={styles.errorText}>{errors.fullName}</div>
+              )}
+              <small className={styles.helperText}>Только буквы, пробелы и дефисы</small>
             </div>
             
             {/* Локомотив с сортировкой */}
