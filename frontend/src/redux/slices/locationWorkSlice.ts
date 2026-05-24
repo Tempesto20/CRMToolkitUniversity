@@ -1,6 +1,30 @@
 import axios from 'axios';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
+
+
+
+interface LocationWorkState {
+  locationWorks: any[];
+  locationWorksWithStats: any[];
+  popularLocations: any[];
+  searchResults: any[];
+  status: 'idle' | 'loading' | 'error';
+  error: string | null;
+}
+
+const initialState: LocationWorkState = {
+  locationWorks: [],
+  locationWorksWithStats: [],
+  popularLocations: [],
+  searchResults: [],
+  status: 'idle',
+  error: null,
+};
+
+
+
+
 export const fetchLocationWorks = createAsyncThunk(
   'locationWork/fetchLocationWorksStatus',
   async () => {
@@ -61,23 +85,6 @@ export const deleteLocationWork = createAsyncThunk(
   }
 );
 
-interface LocationWorkState {
-  locationWorks: any[];
-  locationWorksWithStats: any[];
-  popularLocations: any[];
-  searchResults: any[];
-  status: 'idle' | 'loading' | 'error';
-  error: string | null;
-}
-
-const initialState: LocationWorkState = {
-  locationWorks: [],
-  locationWorksWithStats: [],
-  popularLocations: [],
-  searchResults: [],
-  status: 'idle',
-  error: null,
-};
 
 const locationWorkSlice = createSlice({
   name: 'locationWork',

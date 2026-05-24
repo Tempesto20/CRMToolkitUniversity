@@ -63,6 +63,35 @@ export interface LeaveFormData {
   endDate: string;
 }
 
+
+
+interface LeaveState {
+  leaves: Leave[];
+  leaveTypes: ReturnType<typeof transformApiLeaveType>[];
+  employees: ReturnType<typeof transformApiEmployee>[];
+  stats: ApiLeaveStats | null;
+  status: 'idle' | 'loading' | 'error';
+  deleteStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
+  successMessage: string | null;
+  searchQuery: string;
+}
+
+const initialState: LeaveState = {
+  leaves: [],
+  leaveTypes: [],
+  employees: [],
+  stats: null,
+  status: 'idle',
+  deleteStatus: 'idle',
+  error: null,
+  successMessage: null,
+  searchQuery: '',
+};
+
+
+
+
 // Преобразование с проверкой на null
 const transformApiLeave = (apiLeave: ApiLeave): Leave | null => {
   try {
@@ -334,29 +363,6 @@ export const deleteLeave = createAsyncThunk(
   }
 );
 
-interface LeaveState {
-  leaves: Leave[];
-  leaveTypes: ReturnType<typeof transformApiLeaveType>[];
-  employees: ReturnType<typeof transformApiEmployee>[];
-  stats: ApiLeaveStats | null;
-  status: 'idle' | 'loading' | 'error';
-  deleteStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
-  error: string | null;
-  successMessage: string | null;
-  searchQuery: string;
-}
-
-const initialState: LeaveState = {
-  leaves: [],
-  leaveTypes: [],
-  employees: [],
-  stats: null,
-  status: 'idle',
-  deleteStatus: 'idle',
-  error: null,
-  successMessage: null,
-  searchQuery: '',
-};
 
 const leavesSlice = createSlice({
   name: 'leaves',

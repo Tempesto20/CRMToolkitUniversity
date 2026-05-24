@@ -364,10 +364,17 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       
       let errorMessage = 'Ошибка при добавлении сотрудника';
       
-      if (err.response?.data?.error === 'Сотрудник с таким личным номером уже существует') {
-        const existing = err.response?.data?.existing;
-        errorMessage = `Ошибка: ${err.response.data.error}. Существующий сотрудник: ${existing?.fullName}, должность: ${existing?.position}`;
+      // Redux Toolkit сериализует ошибки — проверяем разные форматы
+      const serverError = err.payload || err.response?.data || err;
+      
+      if (serverError?.error === 'Сотрудник с таким личным номером уже существует') {
+        const existing = serverError.existing;
+        errorMessage = `Ошибка: ${serverError.error}. Существующий сотрудник: ${existing?.fullName}, должность: ${existing?.position}`;
         setErrors(prev => ({ ...prev, personalNumber: 'Личный номер уже используется' }));
+      } else if (serverError?.error) {
+        errorMessage = serverError.error;
+      } else if (err.message) {
+        errorMessage = err.message;
       }
       
       // Показываем сообщение об ошибке
@@ -386,6 +393,14 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     }
   };
 
+
+
+
+
+
+
+
+  
   if (!visible) return null;
 
 

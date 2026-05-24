@@ -1,6 +1,46 @@
 import axios from 'axios';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
+
+
+
+
+interface LocomotiveState {
+  locomotives: any[];
+  serviceTypes: any[];
+  workTypes: any[];
+  locations: any[];
+  availableLocomotives: any[];
+  locomotivesByService: any[];
+  stats: any;
+  status: 'idle' | 'loading' | 'error';
+  deleteStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
+  successMessage: string | null;
+}
+
+const initialState: LocomotiveState = {
+  locomotives: [],
+  serviceTypes: [],
+  workTypes: [],
+  locations: [],
+  availableLocomotives: [],
+  locomotivesByService: [],
+  stats: null,
+  status: 'idle',
+  deleteStatus: 'idle',
+  error: null,
+  successMessage: null,
+};
+
+
+
+
+
+
+
+
+
 export const fetchLocomotives = createAsyncThunk(
   'locomotives/fetchLocomotivesStatus',
   async () => {
@@ -81,33 +121,6 @@ export const fetchLocomotiveStats = createAsyncThunk(
   }
 );
 
-interface LocomotiveState {
-  locomotives: any[];
-  serviceTypes: any[];
-  workTypes: any[];
-  locations: any[];
-  availableLocomotives: any[];
-  locomotivesByService: any[];
-  stats: any;
-  status: 'idle' | 'loading' | 'error';
-  deleteStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
-  error: string | null;
-  successMessage: string | null;
-}
-
-const initialState: LocomotiveState = {
-  locomotives: [],
-  serviceTypes: [],
-  workTypes: [],
-  locations: [],
-  availableLocomotives: [],
-  locomotivesByService: [],
-  stats: null,
-  status: 'idle',
-  deleteStatus: 'idle',
-  error: null,
-  successMessage: null,
-};
 
 const locomotivesSlice = createSlice({
   name: 'locomotives',

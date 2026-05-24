@@ -1,90 +1,8 @@
 import axios from 'axios';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-const API_BASE_URL = 'http://localhost:3000';
 
-// Асинхронные thunks
-export const createEmployee = createAsyncThunk(
-  'employees/createEmployeeStatus',
-  async (formData: FormData) => {
-    const { data } = await axios.post(`${API_BASE_URL}/api/employees`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return data;
-  }
-);
 
-export const updateEmployee = createAsyncThunk(
-  'employees/updateEmployeeStatus',
-  async ({ personalNumber, formData }: { personalNumber: number; formData: FormData }) => {
-    const { data } = await axios.put(
-      `${API_BASE_URL}/api/employees/${personalNumber}`, 
-      formData, 
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
-    );
-    return data;
-  }
-);
-
-export const fetchServiceTypes = createAsyncThunk(
-  'employees/fetchServiceTypesStatus',
-  async () => {
-    const { data } = await axios.get(`${API_BASE_URL}/service-types`);
-    return data as any[];
-  }
-);
-
-export const fetchWorkTypesByService = createAsyncThunk(
-  'employees/fetchWorkTypesByServiceStatus',
-  async (serviceTypeId: number) => {
-    const { data } = await axios.get(`${API_BASE_URL}/api/employees/work-types/${serviceTypeId}`);
-    return data as any[];
-  }
-);
-
-export const fetchBrigadas = createAsyncThunk(
-  'employees/fetchBrigadasStatus',
-  async () => {
-    const { data } = await axios.get(`${API_BASE_URL}/brigada`);
-    return data as any[];
-  }
-);
-
-export const fetchLocomotives = createAsyncThunk(
-  'employees/fetchLocomotivesStatus',
-  async () => {
-    const { data } = await axios.get(`${API_BASE_URL}/locomotives`);
-    return data as any[];
-  }
-);
-
-export const fetchAllEmployees = createAsyncThunk(
-  'employees/fetchAllEmployeesStatus',
-  async (searchQuery?: string) => {
-    try {
-      const url = searchQuery 
-        ? `${API_BASE_URL}/api/employees?search=${encodeURIComponent(searchQuery)}`
-        : `${API_BASE_URL}/api/employees`;
-      
-      console.log('Fetching employees from:', url);
-      const { data } = await axios.get(url);
-      return data as any[];
-    } catch (error) {
-      console.error('Error fetching employees:', error);
-      throw error;
-    }
-  }
-);
-
-export const deleteEmployee = createAsyncThunk(
-  'employees/deleteEmployeeStatus',
-  async (personalNumber: number) => {
-    await axios.delete(`${API_BASE_URL}/api/employees/${personalNumber}`);
-    return personalNumber;
-  }
-);
 
 // Интерфейсы
 export interface ServiceType {
@@ -163,6 +81,111 @@ const initialState: EmployeesState = {
   deleteStatus: 'idle',
   searchQuery: '', // ДОБАВИМ ПОЛЕ ДЛЯ ПОИСКА
 };
+
+
+
+const API_BASE_URL = 'http://localhost:3000';
+
+// Асинхронные thunks
+// export const createEmployee = createAsyncThunk(
+//   'employees/createEmployeeStatus',
+//   async (formData: FormData) => {
+//     const { data } = await axios.post(`${API_BASE_URL}/api/employees`, formData, {
+//       headers: { 'Content-Type': 'multipart/form-data' },
+//     });
+//     return data;
+//   }
+// );
+
+
+export const createEmployee = createAsyncThunk(
+  'employees/createEmployeeStatus',
+  async (formData: FormData, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(`${API_BASE_URL}/api/employees`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return data;
+    } catch (error: any) {
+      // Передаём ответ сервера в rejected action
+      return rejectWithValue(error.response?.data || { error: 'Неизвестная ошибка' });
+    }
+  }
+);
+
+
+export const updateEmployee = createAsyncThunk(
+  'employees/updateEmployeeStatus',
+  async ({ personalNumber, formData }: { personalNumber: number; formData: FormData }) => {
+    const { data } = await axios.put(
+      `${API_BASE_URL}/api/employees/${personalNumber}`, 
+      formData, 
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }
+    );
+    return data;
+  }
+);
+
+export const fetchServiceTypes = createAsyncThunk(
+  'employees/fetchServiceTypesStatus',
+  async () => {
+    const { data } = await axios.get(`${API_BASE_URL}/service-types`);
+    return data as any[];
+  }
+);
+
+export const fetchWorkTypesByService = createAsyncThunk(
+  'employees/fetchWorkTypesByServiceStatus',
+  async (serviceTypeId: number) => {
+    const { data } = await axios.get(`${API_BASE_URL}/api/employees/work-types/${serviceTypeId}`);
+    return data as any[];
+  }
+);
+
+export const fetchBrigadas = createAsyncThunk(
+  'employees/fetchBrigadasStatus',
+  async () => {
+    const { data } = await axios.get(`${API_BASE_URL}/brigada`);
+    return data as any[];
+  }
+);
+
+export const fetchLocomotives = createAsyncThunk(
+  'employees/fetchLocomotivesStatus',
+  async () => {
+    const { data } = await axios.get(`${API_BASE_URL}/locomotives`);
+    return data as any[];
+  }
+);
+
+export const fetchAllEmployees = createAsyncThunk(
+  'employees/fetchAllEmployeesStatus',
+  async (searchQuery?: string) => {
+    try {
+      const url = searchQuery 
+        ? `${API_BASE_URL}/api/employees?search=${encodeURIComponent(searchQuery)}`
+        : `${API_BASE_URL}/api/employees`;
+      
+      console.log('Fetching employees from:', url);
+      const { data } = await axios.get(url);
+      return data as any[];
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      throw error;
+    }
+  }
+);
+
+export const deleteEmployee = createAsyncThunk(
+  'employees/deleteEmployeeStatus',
+  async (personalNumber: number) => {
+    await axios.delete(`${API_BASE_URL}/api/employees/${personalNumber}`);
+    return personalNumber;
+  }
+);
+
 
 const employeesSlice = createSlice({
   name: 'employees',
